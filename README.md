@@ -5,8 +5,10 @@ Out: Session 1 (5 Sep 2026) · Due: 9:00 AM, Session 2 (12 Sep 2026)
 
 **This repository gets you the data. Everything after that is yours to write.**
 
-The full assignment brief is on Brightspace and it is the specification. This file
-only covers running the pipeline.
+**The full assignment brief is on Brightspace and it is the specification** — the
+exhibits, the six questions, the thresholds and the grading are all there. This file
+only covers running the pipeline. `REPORT.md` is the skeleton for your write-up and
+restates the six questions.
 
 ---
 

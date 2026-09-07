@@ -13,6 +13,46 @@ do; the writing is graded alongside the code.
 
 ---
 
+## The six questions
+
+These are also in the assignment brief on Brightspace, which is the authoritative
+copy. They are repeated here because this skeleton refers to them by number.
+Answer them in the sections indicated, in order, with numbers.
+
+**Q1. What is each measure actually made of?**
+From Table 3: how concentrated is each list's count, and what fraction comes from
+the ten most frequent words? For uncertainty in particular, are the words driving
+the count management hedging, or the standing furniture of a risk-factor section
+that gets copied forward unchanged?
+
+**Q2. Are sentiment and uncertainty measuring different things?**
+Report the correlation between the two proportional measures, and again between the
+two tf.idf measures. Then find a filing that scores high on one and low on the
+other, and say what it looks like. If the correlation is high, say honestly how much
+of the rest of your report is one result rather than two.
+
+**Q3. Did either measure trend over 2021-2025?**
+Figure 1 and Table 4. Give the direction, the size in percentage points per year,
+and the t-statistic from the specification you trust, saying which that is and why.
+Then say which reading of the trend your own evidence supports.
+
+**Q4. Does uncertainty language predict volatility?**
+Table 5, both specifications. Report both coefficients and explain what changed
+between them and why. The difference is the answer, not either number on its own.
+
+**Q5. Do 10-Qs behave like 10-Ks?**
+Run Tables 4 and 5 separately on each form type. Then address three things: 10-Qs
+are shorter and more templated, so what happens to the variance of a proportional
+measure; a 10-Q lands within days of an earnings release, so is the filing-date
+reaction even separately identified; and which form type should carry more textual
+signal.
+
+**Q6. Which of your results do you believe?**
+Not the same question as which of them are significant. Your tests do not all have
+the same power, and they do not all fail in the same direction. Go test by test.
+
+---
+
 ## 1. What I did
 
 The question, the corpus, and the measure, in one short paragraph. A reader who
