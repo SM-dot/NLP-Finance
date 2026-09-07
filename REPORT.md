@@ -15,9 +15,7 @@ do; the writing is graded alongside the code.
 
 ## The six questions
 
-These are also in the assignment brief on Brightspace, which is the authoritative
-copy. They are repeated here because this skeleton refers to them by number.
-Answer them in the sections indicated, in order, with numbers.
+Answer these in the sections indicated, in order, with numbers.
 
 **Q1. What is each measure actually made of?**
 From Table 3: how concentrated is each list's count, and what fraction comes from

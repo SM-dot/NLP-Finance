@@ -5,10 +5,9 @@ Out: Session 1 (5 Sep 2026) · Due: 9:00 AM, Session 2 (12 Sep 2026)
 
 **This repository gets you the data. Everything after that is yours to write.**
 
-**The full assignment brief is on Brightspace and it is the specification** — the
-exhibits, the six questions, the thresholds and the grading are all there. This file
-only covers running the pipeline. `REPORT.md` is the skeleton for your write-up and
-restates the six questions.
+The one-page assignment sheet on Brightspace says what to produce. This file says how
+to get the data and pins down the details that need exact numbers. `REPORT.md` is the
+skeleton for your write-up and lists the six questions.
 
 ---
 
@@ -50,7 +49,7 @@ after attempting the download, and say what you tried and what the error was.
 
 ## What you write
 
-Everything else, in your own notebook, from the specification in the brief:
+Everything else, in your own notebook:
 
 - the two tone measures, proportional and tf.idf
 - the trading calendar, the day-0 rule, and the filing-period excess return
@@ -58,8 +57,46 @@ Everything else, in your own notebook, from the specification in the brief:
 - the sample filters, the controls, and the waterfall in Table 1
 - all seven exhibits and the regressions behind them
 
-There is no notebook template and there are no tests in this repository. Structure
-your own notebook around the exhibits in the brief, in that order.
+There is no notebook template and there are no tests. Structure your own notebook
+around the exhibits on the assignment sheet, in that order.
+
+## The details that need exact numbers
+
+Everything else is on the assignment sheet. These are here because they have to be
+identical across the class for anyone's Table 1 to be comparable to anyone else's.
+
+**Sample filters**, applied in this order, counting what each one removes:
+
+1. Drop amendments (10-K/A, 10-Q/A) and anything that failed to parse.
+2. At least 2,000 words for a 10-K, 1,000 for a 10-Q.
+3. One filing per company per calendar quarter, keeping the earliest.
+4. A usable day 0, and a price on day -1 of at least $3.
+5. At least 60 trading days of returns before day 0 and 60 after.
+
+**Day 0.** The first trading day on or after the later of two dates: the EDGAR filing
+date, and the acceptance date shifted forward one day when acceptance lands at or
+after 16:00 Eastern. `acceptance_datetime` is UTC, so convert it first. Report how
+many filings this moves.
+
+**Windows.** Excess return over days [0, +3] against SPY, measured from the close on
+day -1. Realised volatility over [-60, -6] before and [+4, +63] after, annualised.
+
+**Controls.** log size (price on day -1 times the share count printed on that filing,
+in `data/prices/shares.csv`), log dollar volume and excess return over [-60, -6],
+pre-filing volatility, a 10-K dummy, and firm and quarter fixed effects.
+
+**tf.idf self-check.** Equation (1), natural logs, with `a_j` the average word count
+*within* document j (total words over distinct words). Three documents, word list
+{LOSS, RISK}, so N = 3, df(LOSS) = 2, df(RISK) = 2, df(GAIN) = 3:
+
+| Document | Words | a_j | Proportional | tf.idf |
+|---|---|---|---|---|
+| d1 | LOSS LOSS RISK GAIN | 4/3 | 0.7500 | 0.8480 |
+| d2 | LOSS GAIN GAIN | 1.5 | 0.3333 | 0.2885 |
+| d3 | RISK RISK RISK GAIN | 2.0 | 0.7500 | 0.5026 |
+
+Report those three tf.idf figures in your write-up. If you get 0.368 for d1, you are
+using log base 10.
 
 ---
 
