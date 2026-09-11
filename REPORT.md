@@ -5,8 +5,8 @@
 FRE-GY 7871 A · NLP and the Investment Process
 
 **Name:** Syonaa Mehra  
-**NetID:** [Insert NetID]  
-**GitHub repo:** [github.com/anmolsingh0219/FRE-GY-7871A-Assignment1](https://github.com/anmolsingh0219/FRE-GY-7871A-Assignment1)
+**NetID:** sm13644 
+**GitHub repo:** https://github.com/SM-dot/NLP-Finance
 
 ---
 
