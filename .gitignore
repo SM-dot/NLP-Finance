@@ -1,2 +1,35 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
 *
+# 1. Ignore the data folder entirely...
+data/*
+
+# ...but explicitly keep the frozen ARK snapshot folder and file
+!data/universe/
+data/universe/*
+!data/universe/ark_holdings_raw.csv
+
+# 2. Python environment & cache files
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+
+# 3. OS Junk files
+.DS_Store
+
+# 4. Optional: Ignore the generated CSV tables folder (since you only need to submit the PDF)
+report_tables/
+
+# 5. Assignment 2: track the whole folder except the regenerated data/ directory.
+# "No data files" per the assignment, but code, notebook output, figures and
+# summary tables are submitted.
+!assignment-2/
+!assignment-2/**
+assignment-2/data/**
+!assignment-2/data/
+!assignment-2/data/lexicons/
+!assignment-2/data/lexicons/**
+assignment-2/**/__pycache__/
+assignment-2/**/.ipynb_checkpoints/

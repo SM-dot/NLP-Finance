@@ -1,0 +1,12 @@
+pandas
+numpy
+requests
+beautifulsoup4
+pdfplumber
+yfinance
+statsmodels
+transformers
+torch
+tqdm
+matplotlib
+jupyter
