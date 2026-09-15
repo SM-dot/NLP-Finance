@@ -203,34 +203,46 @@ table3_display.round(4)""")
 md("""**Reading Table 3.** The 3-month bill control is highly significant for every indicator
 except growth-minus-value, confirming the control is doing its job: most of a statement's
 market impact is the rate decision itself, not its wording. Once that's controlled for, tone
-has a modest, mostly-insignificant marginal effect — consistent with Doh, Kim and Yang
-(2021), who also find text-based tone measures explain only a small, though non-zero, share
-of the reaction after controlling for the decision. Two exceptions stand out: the word-list
-score is significantly (p<0.05) associated with growth-minus-value — a more hawkish
-statement corresponds with growth stocks *outperforming* value on the day, the opposite of
-the simple duration-sensitivity story — and FinBERT sentiment is marginally (p<0.10)
-associated with a stronger dollar. Both are discussed in the report.""")
+has a modest, mostly-insignificant marginal effect. This is closer to Doh, Kim and Yang
+(2021)'s own diagnosis of *why word lists struggle* on FOMC text (see below) than to their
+headline finding about their own USE-based method, which they report explains as much of
+the reaction as the decision itself. Two exceptions stand out here: the word-list score is
+significantly (p<0.05) associated with growth-minus-value — a more hawkish statement
+corresponds with growth stocks *outperforming* value on the day, the opposite of the simple
+duration-sensitivity story — and FinBERT sentiment is marginally (p<0.10) associated with a
+stronger dollar, the same sign "Parsing the Fed" finds independently. Both are discussed
+further below and in the report.""")
 
 md("""## Comparison with the readings
 
-- **Doh, Kim and Yang (2021)** build a word-count tone measure and find it explains a
-  small but statistically real share of Treasury-yield moves around FOMC statements, once
-  the rate decision is controlled for. Table 3 lands in the same place: our word-list tone
-  measure is directionally sensible (hawkish → higher yields, in three of four indicators)
-  but rarely clears conventional significance once the 3-month bill is in the regression —
-  the decision dominates the words, exactly as in their result.
-- **Doh, Song and Yang (2020/2023)** compare statements to *alternative* statements the
-  Committee considered but didn't choose, which isolates wording from the decision more
-  cleanly than we can with only realized text. Our 3-month-bill control is a cruder version
-  of the same idea — proxying "what the market already expected the decision to be" — and
-  gets a similar qualitative answer: wording matters at the margin, not at the center.
-- **"Parsing the Fed" (2021)** runs the same three methods this assignment asks for
-  (factor similarity, word list, FinBERT) and finds FinBERT often disagrees with the other
-  two because it measures generic sentiment, not a hawkish/dovish axis. Section "Powell vs.
-  Warsh" above finds the same gap: FinBERT rates Warsh-era communication as more "positive"
-  across the board, while the word list is much closer between the two chairs — a sign that
-  at least part of the FinBERT gap is optimistic economic language (strong growth,
-  productivity), not a hawkish shift per se.""")
+- **Doh, Kim and Yang (2021) don't build a word list — and say why not.** Their word clouds
+  for hawkish- vs. dovish-leaning alternative statements look nearly identical ("inflation"
+  is the second most common word in both), which they say means FOMC text has too little
+  word variation for a dictionary approach. They score tone instead by comparing the
+  released statement's embedding to Fed-staff alternative statements, and find tone explains
+  "at least as much" of the reaction as the decision — correlating far more with the
+  forward-guidance component of surprises (r=0.52) than the rate-decision component (r=0.20).
+  Table 3 lands closer to their *skepticism about word lists* than their headline result:
+  our word-list score is insignificant in 3 of 4 indicators, consistent with formulaic FOMC
+  prose diluting a phrase count. We can't test their FG-vs-decision split directly, since
+  that needs a multi-factor surprise decomposition (Swanson 2020); our 3-month bill is a
+  cruder, one-factor stand-in.
+- **Doh, Song and Yang (2020/2023)** use the same alternative-statement method, but
+  alternative statements are declassified only five years after the meeting — meaning their
+  exact method cannot be run on 2020-2026 data at all, which is exactly why this assignment
+  asks for a word list and FinBERT instead. The same paper also tests FinBERT's numeric
+  reasoning directly and finds it fails: FinBERT ranks "keeps at 3.75%" as most similar to
+  "raise by 50bps to 4.25%," not to the equidistant hold/25bp pair. That matches what we see
+  above — FinBERT's Warsh-era jump reads more like generically upbeat framing than a
+  response to the quantitative substance of the meeting.
+- **"Parsing the Fed" (2021)** is the direct precedent for this assignment — the same four
+  indicators, the same three-method menu. Its word list explains growth-minus-value far
+  better than ours (24.4% R² vs. our 1-3%), likely because it scores four separate topics
+  jointly (including a general "Sentiment" topic) rather than one hawkish/dovish axis. Its
+  FinBERT-sentiment regression finds a significant, positive link between sentiment and the
+  10s2s spread and a same-signed link with the dollar — both signs match Table 3 here, which
+  is the strongest corroborating evidence in this report for a real (if modest) FinBERT
+  effect, found independently nine years apart.""")
 
 md("""## Forecast: the September 16, 2026 FOMC meeting
 

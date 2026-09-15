@@ -16,6 +16,14 @@ substantive judgment calls.
   not happened as of the submission deadline), Claude used web search to confirm the exact
   chair-transition date and the meeting date, and to check current market-implied odds
   (CME FedWatch) as an external benchmark for the forecast.
+- **The "how your results compare with the readings" section was drafted twice.** The first
+  pass, written before I had supplied the three assigned PDFs, was explicitly flagged in the
+  report as unverified and asked me to check it. I then gave Claude the actual PDFs (Doh,
+  Kim and Yang 2021; Doh, Song and Yang 2020/2023; the "Parsing the Fed" slides), and Section
+  4 was rewritten against the real text — including a correction I would not have caught
+  myself: the first draft claimed Doh, Kim and Yang build a word-count tone measure similar
+  to ours, when in fact they explicitly argue word lists don't work well on FOMC text and use
+  a different method (embedding similarity to alternative statements) instead.
 - **Boilerplate code.** The word-list scoring function, the FinBERT batching/GPU (MPS)
   wrapper, the trading-day reaction-window logic, and the regression and plotting code in
   the notebook were drafted by Claude and then reviewed line by line.

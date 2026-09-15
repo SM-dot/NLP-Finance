@@ -51,7 +51,12 @@ Two independent tone measures were built for every document:
    purpose-built monetary-policy list, not the general-purpose Loughran-McDonald finance
    dictionary, which has no hawkish/dovish axis at all.
 2. **FinBERT** (`ProsusAI/finbert`) sentence-level sentiment, aggregated as mean
-   P(positive) − mean P(negative) per document.
+   P(positive) − mean P(negative) per document. The assignment allows an alternative
+   LM-based method — cosine similarity between FinBERT sentence embeddings and key sentences
+   like "Interest rates will rise," which is exactly "Parsing the Fed"'s "factor similarity"
+   method (Section 4 compares against it). We use sentiment instead, since the assignment's
+   own reading list treats it as a separate, equally valid method, and it is more directly
+   comparable to the word list (both are document-tone scores rather than similarity scores).
 
 ![Figure 1](figures/figure1_tone_over_time.png)
 
@@ -160,34 +165,60 @@ most of its variance, leaving less room for anything — tone included — to ad
 
 ## 4. How this compares with the readings
 
-*A note on this section: the three readings live on Brightspace, which was not accessible
-while drafting this report. The "Parsing the Fed" description below draws on the method
-summary given directly on the assignment sheet itself ("factor similarity, a word list, and
-FinBERT sentiment"); the Doh et al. characterizations reflect general familiarity with that
-published research line, not a fresh re-read of the specific PDFs assigned. **Please check
-the three bullets below against the actual readings before submitting** — this is the one
-part of the report that could not be verified against source material directly.*
+**Doh, Kim and Yang (2021) don't actually build a word list — and they explain why not.**
+They show word clouds for statements that lean hawkish (Alt. C/D) versus dovish (Alt. A) and
+find them nearly identical: "inflation" is the second most frequent word in *every* version,
+regardless of stance, which they say means "FOMC statements may not have sufficient word
+variation, making it difficult to construct a dictionary of words classified as having
+specific tones." Instead they score tone by comparing the released statement's embedding
+(via Google's Universal Sentence Encoder) to Fed-staff-drafted alternative statements, and
+find that tone explains "at least as much" of the market reaction as the rate decision
+itself — correlating far more with the *forward-guidance* component of policy surprises
+(r=0.52 against Swanson's FG factor) than with the federal-funds-rate component (r=0.20).
 
-- **Doh, Kim and Yang (2021)** build a word-count tone measure and find it explains a
-  small but statistically real share of Treasury-yield moves around FOMC statements once
-  the rate decision is controlled for. Table 3 lands in the same place: the word-list tone
-  measure here is directionally sensible on three of four indicators but rarely clears
-  conventional significance after the 3-month bill is in the regression — the decision
-  dominates the words, just as in their result. Where we differ: they find modest but
-  positive explanatory power on yields; we find none there, but do find a significant
-  effect on the growth-value spread that their setup does not test.
-- **Doh, Song and Yang (2020/2023)** isolate wording from the decision more cleanly than we
-  can, by comparing the statement the Committee chose to the alternative statements it
-  considered and rejected. Our 3-month-bill control is a cruder proxy for the same idea —
-  "what had the market already priced in" — and arrives at a similar qualitative
-  conclusion: wording matters at the margin, not at the center of the market reaction.
-- **"Parsing the Fed" (2021)** runs the same three methods this assignment specifies
-  (factor similarity, word list, FinBERT sentiment) and reports that FinBERT frequently
-  disagrees with the other two, because it measures generic sentiment rather than a
-  hawkish/dovish axis. Section 2 above reproduces that exact disagreement: FinBERT rates
-  Warsh-era communication as dramatically more "positive" while the purpose-built word list
-  shows almost no change from Powell — the clearest single finding in this report, and one
-  that would be invisible if only one of the two required methods had been used.
+Our results land closer to their skepticism about word lists than to their headline finding.
+In Table 3, the word-list tone score is statistically indistinguishable from zero for three
+of four indicators once the decision is controlled for — consistent with their diagnosis
+that FOMC prose repeats a small set of stock phrases ("elevated inflation," "solid pace")
+regardless of stance, which dilutes a dictionary-based count. We could not test their more
+specific claim about forward guidance versus the rate decision, since that requires
+decomposing the surprise into separate FFR/FG/asset-purchase factors (as in Swanson 2020);
+our single 3-month-bill control is a cruder, one-factor version of the same idea.
+
+**Doh, Song and Yang (2020/2023)**, the working paper behind the KC Fed article, use the
+same alternative-statement approach but add a subtlety directly relevant to this
+assignment's window: alternative statements are declassified only five years after the
+meeting, so a student today could only obtain them through roughly 2020 — years before
+Kevin Warsh's term even began. Their method, in other words, cannot be run on the very
+period this report is about, which is exactly why the assignment specifies a word list and
+FinBERT instead of alternative-statement similarity. The paper is also the source of a
+direct, documented critique of the tool we use for our second method: they test FinBERT's
+numeric reasoning against a fine-tuned USE and find FinBERT fails it, ranking "keeps at
+3.75%" as most similar to "raise by 50bps to 4.25%" rather than to the equidistant
+hold/25bp-move pair — a symptom, they argue, of FinBERT not being trained to recognize
+numeracy. That matches what Section 2 finds here: FinBERT's Warsh-era jump looks more like
+it is responding to generically upbeat framing ("productivity growth and capital investment
+are strong") than to the quantitative substance of the meeting.
+
+**"Parsing the Fed" (2021)** is the closest precedent to this assignment — literally the
+same four target indicators (10s2s spread, 1-year yield, DXY, growth-minus-value) and the
+same three-method menu (factor similarity, word list, FinBERT sentiment). Two of its
+findings replicate here. First, its word list explains growth-minus-value far better than
+ours does (24.4% R² versus our 1.3% and 0.3%) — but their lexicon scores four separate
+topics (Interest Rate, Economy, Job Market, Sentiment) jointly, not one hawkish/dovish axis,
+and a multi-regressor model will mechanically fit more variance; their "Sentiment" topic in
+particular is a general-optimism score, which plausibly tracks growth-versus-value rotation
+better than policy tone alone does. Second, their FinBERT-sentiment regression finds a
+significant, positive relationship between sentiment and the 10s2s spread (more positive
+sentiment, wider/steeper spread) and a same-signed, smaller relationship with the dollar —
+both signs match what we find in Table 3, where FinBERT sentiment is positively (and, for
+DXY, marginally significantly) associated with both indicators. That two independent
+samples nine years apart find the same sign is the strongest single piece of corroborating
+evidence in this report for a real, if modest, FinBERT-sentiment effect. Where we differ
+most: our 3-month-bill control absorbs much of what would otherwise look like "tone"
+explanatory power — visible in how much higher our 1-year-yield R² is (≈31%) than either of
+theirs (7-15%) — because their specifications have no equivalent decision control, so some
+of what they attribute to tone may be the decision itself leaking through.
 
 ## 5. Forecast: the September 16, 2026 FOMC meeting
 
