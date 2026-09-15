@@ -40,6 +40,11 @@ def main():
     keep_fb = ["doc_type", "date", "path", "finbert_score", "n_sentences", "mean_pos", "mean_neg", "mean_neu"]
     df = wl.merge(fb[keep_fb], on=["doc_type", "date", "path"], how="left")
 
+    # release_time was added to documents.csv after the tone-scoring passes ran;
+    # merge it in here rather than re-running FinBERT for a metadata-only column.
+    times = pd.read_csv(INTERIM / "documents.csv")[["doc_type", "date", "path", "release_time", "release_time_source"]]
+    df = df.merge(times, on=["doc_type", "date", "path"], how="left")
+
     market = pd.read_csv(MARKET / "daily_indicators.csv", index_col=0, parse_dates=True).sort_index()
 
     level_cols = {"T10Y2Y": "d_10s2s", "DGS1": "d_1y", "DXY": "d_dxy", "DGS3MO": "d_3mo_bill"}

@@ -15,16 +15,20 @@ git — `data/` is gitignored, per the assignment's instructions.
 | `scripts/03_score_wordlist.py` | Scores every document with the custom hawkish/dovish word list | ~1 s |
 | `scripts/04_score_finbert.py` | Scores every document with FinBERT (ProsusAI/finbert), sentence by sentence | ~4 min (Apple Silicon GPU via MPS) |
 | `scripts/05_build_dataset.py` | Merges tone scores with the one-day market reaction to each release | ~5 s |
+| `scripts/06_add_release_times.py` | Extracts each document's release time from its text (Fed convention where not published) | ~1 s |
 
 ```bash
 pip install -r requirements.txt
 cd scripts
 python 01_collect_documents.py
+python 06_add_release_times.py   # run before 05 - adds release_time to documents.csv
 python 02_market_data.py
 python 03_score_wordlist.py
 python 04_score_finbert.py
-python 05_build_dataset.py
+python 05_build_dataset.py       # merges tone + release_time + market reaction
 ```
+(Script numbering reflects the order things were built, not run - `06` was added
+after a review caught that release time wasn't being recorded, and must run before `05`.)
 
 Then open `analysis.ipynb`.
 

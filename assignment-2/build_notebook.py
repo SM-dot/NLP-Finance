@@ -58,6 +58,18 @@ table1 = table1.rename(index={"presser": "press conference"})
 table1.to_csv(TABLES / "table1_documents_by_type_chair.csv")
 table1""")
 
+md("""### Release date and time
+
+Every document's release date and time, as required. Statements always publish an exact
+"For release at H:MM" time; minutes mostly do (the rest default to the Fed's standard
+2:00 p.m. ET, noted as a convention, not a scrape); press conferences follow the
+statement's 2:00 p.m. release by a standing ~30 minutes; speeches and testimony carry no
+published intraday timestamp on the Fed's site, which is recorded as "unspecified" rather
+than guessed.""")
+
+code("""df[["doc_type", "release_time", "release_time_source"]].drop_duplicates(
+    subset=["doc_type", "release_time_source"]).sort_values("doc_type")""")
+
 md("""## Figure 1. Hawkish/dovish tone over time, by document type
 
 Both tone measures — the custom word list and FinBERT sentiment — plotted over the full
@@ -311,15 +323,18 @@ md("""**Forecast summary** (also stated in the report):
   growth-minus-value ~48% / +0.001. All four are close to a coin flip because the modal
   scenario (hike) is heavily priced in; the resolution of the small remaining uncertainty
   (hold vs. hike) is what actually moves markets on the day.
-- **Recommendation:** position for a **flatter 10s2s spread** (e.g., short the spread /
-  receive the 2-year vs. pay the 10-year) heading into the meeting. This is the one
-  regression relationship in Table 3 that is both economically large and highly
-  significant (3-month-bill coefficient -0.44, p<0.001) — a hike mechanically pulls the
-  front end up faster than the back end — and it agrees with the fundamental read (hawkish
-  dissents rising, inflation language unchanged). **What would prove this wrong:** a hold
-  paired with a statement whose word-list score drops well below July's 4.81 (i.e., an
-  explicit signal that the Committee sees inflation cooling) — that combination points to
-  a steepening, not a flattening, and would be the signal to exit.""")
+- **Recommendation:** position for a **bear flattener** on the 10s2s spread (e.g., short
+  the spread / receive the 2-year vs. pay the 10-year) heading into the meeting — betting
+  yields rise and the front end rises faster than the back end. This is the one regression
+  relationship in Table 3 that is both economically large and highly significant
+  (3-month-bill coefficient -0.44, p<0.001) — a hike mechanically pulls the front end up
+  faster than the back end — and it agrees with the fundamental read (hawkish dissents
+  rising, inflation language unchanged). The two Warsh-era meetings already show both
+  regimes: June 17 (hold, hawkish-leaning) was a bear flattener, July 29 (hold, three
+  dissents for a hike) was a **bull steepener** instead. **What would prove this wrong:**
+  a hold paired with a statement whose word-list score drops well below July's 4.81 (i.e.,
+  an explicit signal that the Committee sees inflation cooling) — that combination points
+  to a bull steepener, not a bear flattener, and would be the signal to exit.""")
 
 nb["cells"] = cells
 nb["metadata"] = {

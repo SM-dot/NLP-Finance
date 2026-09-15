@@ -111,14 +111,17 @@ convention used for speeches/testimony)*
 
 Note that all three releases sharing a meeting date (minutes, press conference, statement)
 necessarily share the same market reaction — they hit the tape the same day — so this table
-really contains six independent market-reaction days, not nine. The June 17 hold (12-0,
-unanimous) coincided with a stronger dollar and a small back-up in yields; the July 29 hold
-(9-3, with three dissents *for* a hike) coincided with dollar weakness and lower yields —
-the opposite of what the word-list and FinBERT tone scores alone would predict, since July's
-statement reads more hawkish on both measures than June's minutes/press-conference pair.
-This is exactly why Step 3 asks for a regression that controls for the decision itself: with
-only six days to look at, a table like this can't separate "the words moved the market" from
-"the market already knew what the decision would be, and moved on that."
+really contains six independent market-reaction days, not nine. In curve language: June 17
+(12-0, unanimous hold) was a **bear flattener** — yields rose (Δ1y +0.14) and the 10s2s
+spread narrowed (Δ10s2s -0.09), consistent with a hawkish-leaning hold. July 29 (9-3, with
+three dissents *for* a hike) was the opposite, a **bull steepener** — yields fell (Δ1y -0.05)
+and the spread widened (Δ10s2s +0.10) — even though July's statement reads more hawkish on
+both tone measures than June's. A hawkish-reading statement producing a bull-steepening
+reaction is exactly the kind of mismatch that motivates Step 3's regression: with only six
+independent days to look at, a table like this can't separate "the words moved the market"
+from "the market already knew what the decision would be, and moved on that" — three
+dissents *wanting a hike* that didn't get one is itself a dovish-relative-to-expectations
+outcome, regardless of how the accompanying prose reads.
 
 **Table 3. Each indicator's one-day change regressed on each tone score, controlling for
 the change in the 3-month bill (full Feb 2018 - Sep 2026 sample, OLS, HC1 robust SEs)**
@@ -156,6 +159,14 @@ priced almost entirely off near-term Fed policy, so the 3-month bill control alo
 most of its variance, leaving less room for anything — tone included — to add power.
 
 ## 4. How this compares with the readings
+
+*A note on this section: the three readings live on Brightspace, which was not accessible
+while drafting this report. The "Parsing the Fed" description below draws on the method
+summary given directly on the assignment sheet itself ("factor similarity, a word list, and
+FinBERT sentiment"); the Doh et al. characterizations reflect general familiarity with that
+published research line, not a fresh re-read of the specific PDFs assigned. **Please check
+the three bullets below against the actual readings before submitting** — this is the one
+part of the report that could not be verified against source material directly.*
 
 - **Doh, Kim and Yang (2021)** build a word-count tone measure and find it explains a
   small but statistically real share of Treasury-yield moves around FOMC statements once
@@ -225,21 +236,33 @@ substantially priced in — most of the potential reaction has already happened 
 weeks leading up to the meeting. The resolution of the remaining 15% probability
 (hold-or-worse) is what would actually move markets on September 16.
 
-**Recommendation.** Position for a **flatter 10s2s spread** heading into the meeting (e.g.,
-short the spread, or receive 2-year / pay 10-year). This is the one relationship in Table 3
-that is both economically large and highly significant — the 3-month-bill coefficient on
-the 10s2s spread is -0.436 (p<0.001) — a hike mechanically pulls the front end up faster
-than the back end, and that mechanical effect is far stronger than anything the tone scores
-add. It also agrees with the fundamental read: rising hawkish dissent and unchanged
-"elevated inflation" language both point toward the front end staying anchored higher for
-longer, even if the September decision itself is small or already priced in.
+**In curve language**, the three rate scenarios each imply a specific, opposite regime, and
+Table 2's two Warsh-era observations already showed both of them actually happening:
 
-**What would prove this wrong.** A hold paired with a statement whose word-list score drops
-well below July's 4.81 — i.e., explicit language that inflation is cooling, not just
-persisting — would point to a steepening, not a flattening, curve, and would be the signal
-to exit the position. A cut would prove it decisively wrong; given the dissent trend and the
-inflation language repeated in every 2026 statement, we assign that outcome only 2%
-probability.
+| Scenario | Probability | Yields (Δ1y) | Spread (Δ10s2s) | Curve regime |
+|---|---:|---:|---:|---|
+| Hike (hawkish) | 85% | rise | narrows | **bear flattener** (June 17 pattern) |
+| Hold (dovish surprise) | 13% | fall | widens | **bull steepener** (July 29 pattern) |
+| Cut (extreme dovish surprise) | 2% | fall sharply | widens sharply | **bull steepener**, larger |
+
+**Recommendation.** Position for a **bear flattener** on the 10s2s spread heading into the
+meeting (e.g., short the spread, or receive 2-year / pay 10-year) — betting that if yields
+move at all, the front end rises faster than the back end. This is the one relationship in
+Table 3 that is both economically large and highly significant — the 3-month-bill
+coefficient on the 10s2s spread is -0.436 (p<0.001) — a hike mechanically pulls the front
+end up faster than the back end, and that mechanical effect is far stronger than anything
+the tone scores add. It also agrees with the fundamental read: rising hawkish dissent and
+unchanged "elevated inflation" language both point toward the front end staying anchored
+higher for longer, even if the September decision itself is small or already priced in.
+
+**What would prove this wrong.** A hold or a cut would produce the opposite regime — a
+**bull steepener**, exactly as it did on July 29 (Δ10s2s +0.10 on a hold) — and would be the
+signal to exit or reverse the position. The specific tell to watch for is a hold paired with
+a statement whose word-list score drops well below July's 4.81 — i.e., explicit language that
+inflation is cooling, not just persisting — since that combination points most clearly to a
+bull steepener rather than a one-off surprise inside an otherwise-hawkish trend. A cut would
+prove it decisively wrong; given the dissent trend and the inflation language repeated in
+every 2026 statement, we assign that outcome only 2% probability.
 
 ---
 *Code, data-collection scripts, the scored corpus (regenerable, not checked into git) and
