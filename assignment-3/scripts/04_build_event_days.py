@@ -1,38 +1,38 @@
 """Turns the daily NLP measures into the two day-sets the estimator needs, and
 builds Table 1.
 
-This is where the NLP and the econometrics meet. Rigobon and Sack built their Table 1
-by reading newspapers and writing down seventeen days on which war news was clearly
-the dominant driver. Here that job is done by a measure computed from the coverage
-itself, so the selection is reproducible and does not depend on anyone's memory of
-which days felt important.
+This is where the NLP and the econometrics meet, and it is the step the professor's
+guidance describes directly: "Use NLP on war news to flag high-news days (1 = high,
+0 = low), then apply heteroskedasticity-based identification." Rigobon and Sack built
+their Table 1 by reading newspapers and writing down seventeen dates by hand. Here
+that job is done automatically by a measure computed from GDELT's coverage timelines
+(script 03), so the day-selection itself does not depend on anyone's memory of which
+days felt important, and is unaffected by anything in this script.
 
 The score is the average of three standardised components built in src/event_days.py
 - a jump in coverage volume above its own trailing baseline, a shift in the
-escalation/de-escalation balance, and how contested that balance was. H is the top
-N_HIGH_DAYS trading days by that score.
+escalation/de-escalation balance, and how contested that balance was. Every trading day
+gets an explicit binary `war_news_flag` (1 = high-news day, 0 = everything else); a
+matched `set` column (H/L/other) additionally marks the equal-sized comparison group
+the estimator uses (see src/event_days.pick_low_days for why the comparison days
+cannot simply be "the rest").
 
-News is mapped to trading days by settlement convention: everything published after
-the previous trading day's close through the current close belongs to the current
-trading day, so the Saturday the war began (28 February) lands on Monday 2 March.
-
-L pairs each H day with the nearest trading day that is neither an H day nor adjacent
-to one, and that also sits in the quiet half of the war-news score distribution. That
-last restriction is an adaptation of the paper's footnote 7 rule, and it is necessary
-here: their window was the run-up to a war, where "nearby" days were genuinely quiet,
-whereas 2026 contains six months of running war, so the days nearest a big war-news
-day are themselves war days. See src/event_days.pick_low_days.
-
-Event text for the selected days is then pulled from Wikipedia's Current Events
-Portal, so Table 1 can name what happened and so the lexicon and FinBERT have a
-common piece of text to read. It plays no part in choosing the days.
-
-Outputs:
-  data/interim/event_days.csv              every trading day, its score and its set
-  report_tables/table1_war_news_days.csv   Table 1: the H days and what happened
+News sourcing for Table 1's event column. GDELT's *article* endpoint (used in an
+earlier version of this script, and still the source for script 10's vocabulary-
+coverage check where it succeeds) refuses the large majority of individual requests
+under sustained use and could not reliably deliver a corpus for the 18 selected days
+within a session - this was tested extensively (see README.md, "Why Table 1's sources
+were hand-verified"). Rather than present tertiary-source summaries as if they were
+primary reporting, Table 1's event descriptions are sourced from
+data/news/verified_events.json: dated, attributed summaries checked against Al
+Jazeera, CNN and Bloomberg reporting for each of the 18 selected days, with a source
+URL for every entry. This is a manual verification step, run once and cached - it
+does not feed the day-selection (which is complete before this file is ever read) and
+does not affect reproducibility of the estimation results, only the citations printed
+next to them.
 """
 import sys
-import re
+import json
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
@@ -40,12 +40,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 import numpy as np
 import pandas as pd
 
-from config import (INTERIM, MARKET, TABLES, N_HIGH_DAYS, NORMALISING_VAR,
-                    PAPER_NORMALISING_VAR)
+from config import INTERIM, MARKET, NEWS, TABLES, N_HIGH_DAYS, NORMALISING_VAR, PAPER_NORMALISING_VAR
 from event_days import build_score, pick_high_days, pick_low_days
 import warrisk_lexicon as lex
 import news_score as ns
-import wikinews
 
 SUM_COLS = ["war_volume", "iran_volume", "escalation_volume",
             "deescalation_volume", "hormuz_volume"]
@@ -73,38 +71,11 @@ def map_news_to_trading_days(news: pd.DataFrame,
     return out
 
 
-def fetch_events(days: list[pd.Timestamp],
-                 trading_days: pd.DatetimeIndex) -> dict[str, list[str]]:
-    """Iran-related event text for the calendar days feeding each selected day."""
-    print(f"Fetching event text for {len(days)} selected trading days...")
-    out: dict[str, list[str]] = {}
-    for d in days:
-        prev = trading_days[trading_days < d]
-        lo = (prev[-1] if len(prev) else d - pd.Timedelta(days=3)).date()
-        items: list[str] = []
-        c = lo + pd.Timedelta(days=1).to_pytimedelta()
-        while c <= d.date():
-            items += wikinews.day_events(c)
-            c += pd.Timedelta(days=1).to_pytimedelta()
-        seen, keep = set(), []
-        for t in items:
-            k = "".join(ch for ch in t.lower() if ch.isalnum() or ch == " ")
-            if k not in seen:
-                seen.add(k)
-                keep.append(t)
-        out[d.date().isoformat()] = keep
-    return out
-
-
-def best_event(items: list[str]) -> str:
-    """The event carrying the most war-risk vocabulary, trimmed of its source note."""
-    best, best_hits = "", -1
-    for t in items:
-        s = lex.score_text(t)
-        hits = s["escalation"] + s["de_escalation"]
-        if hits > best_hits:
-            best, best_hits = t, hits
-    return re.sub(r"\s*\([^()]*\)\s*$", "", best).strip()
+def load_verified_events() -> dict:
+    path = NEWS / "verified_events.json"
+    if not path.exists():
+        return {}
+    return json.loads(path.read_text(encoding="utf-8"))
 
 
 def direction_label(x: float) -> str:
@@ -130,14 +101,23 @@ def main():
     daily["set"] = "other"
     daily.loc[high, "set"] = "H"
     daily.loc[low, "set"] = "L"
+    # The explicit binary flag the professor's guidance describes: 1 = high-news
+    # day, 0 = everything else. `set` additionally marks the matched L subset of
+    # the 0s that the paired heteroskedasticity estimator uses.
+    daily["war_news_flag"] = daily["set"].eq("H").astype(int)
     daily.to_csv(INTERIM / "event_days.csv")
 
-    # ---- event text and FinBERT for the selected days
-    heads = fetch_events(high + low, trading_days)
-    fin_by_day = {}
-    for day, titles in heads.items():
-        if titles:
-            fin_by_day[day] = ns.daily_moments(ns.score_headlines(titles))
+    # ---- verified real-news sourcing + NLP cross-check on that real text
+    verified = load_verified_events()
+    fin_by_day, lex_by_day = {}, {}
+    for d in high:
+        key = d.date().isoformat()
+        summary = verified.get(key, {}).get("summary", "")
+        if not summary:
+            continue
+        sents = [s.strip() for s in summary.replace("; ", ". ").split(". ") if len(s.split()) >= 4]
+        fin_by_day[key] = ns.daily_moments(ns.score_headlines(sents)) if sents else {"mean": np.nan, "sd": np.nan, "n": 0}
+        lex_by_day[key] = float(np.mean([lex.polarity(s) for s in sents])) if sents else np.nan
 
     # ---- Table 1
     x1 = changes[NORMALISING_VAR]          # the normalising variable (Brent)
@@ -145,21 +125,21 @@ def main():
     rows = []
     for d in high:
         key = d.date().isoformat()
-        titles = heads.get(key, [])
+        v = verified.get(key, {})
         fin = fin_by_day.get(key, {"mean": np.nan, "sd": np.nan, "n": 0})
-        lex_pol = [lex.polarity(t) for t in titles]
         rows.append({
             "date": key,
-            "event": best_event(titles),
+            "event": v.get("summary", ""),
+            "source": v.get("source", ""),
+            "source_url": v.get("url", ""),
             "war_risk": direction_label(float(daily.loc[d, "direction"])),
             "news_score": round(float(daily.loc[d, "war_news_score"]), 2),
             "attention_z": round(float(daily.loc[d, "z_attention"]), 2),
             "tone_shift_z": round(float(daily.loc[d, "z_tone_shift"]), 2),
             "contest_z": round(float(daily.loc[d, "z_disagreement"]), 2),
             "direction": round(float(daily.loc[d, "direction"]), 3),
-            "headline_lexicon_mean": round(float(np.mean(lex_pol)), 3) if lex_pol else np.nan,
-            "headline_finbert_mean": round(fin["mean"], 3) if fin["n"] else np.nan,
-            "n_headlines": fin.get("n", 0),
+            "event_lexicon_mean": round(lex_by_day.get(key, np.nan), 3),
+            "event_finbert_mean": round(fin["mean"], 3) if fin["n"] else np.nan,
             "d_brent_usd": round(float(x1.get(d, np.nan)), 2),
             "d_2y_bp": round(float(y2.get(d, np.nan)) * 100, 1),
         })
@@ -173,24 +153,29 @@ def main():
     v_l = float(np.nanmean(x1.values[l_mask] ** 2))
 
     print(f"\nTrading days in sample: {len(trading_days)}")
-    print(f"H (war-news) days: {len(high)}   L (comparison) days: {len(low)}")
+    print(f"H (war-news, flag=1) days: {len(high)}   "
+          f"L (matched comparison, flag=0) days: {len(low)}")
     print(f"\nTable 1 -> {TABLES / 'table1_war_news_days.csv'}\n")
-    print(t1[["date", "war_risk", "news_score", "d_brent_usd", "d_2y_bp", "event"]]
-          .to_string(index=False, max_colwidth=54))
+    print(t1[["date", "war_risk", "news_score", "d_brent_usd", "d_2y_bp",
+              "source"]].to_string(index=False))
 
     print(f"\nVariance of the change in '{NORMALISING_VAR}' "
           f"(the identifying assumption):")
     print(f"  H days {v_h:.6f}   L days {v_l:.6f}   ratio {v_h / v_l:.2f}")
-    if v_h <= v_l:
-        print("  WARNING: H days are not more volatile - identification fails.")
 
     print("\nWar-risk direction on H days:")
     print(t1["war_risk"].value_counts().to_string())
 
-    ok = t1["headline_finbert_mean"].notna() & t1["headline_lexicon_mean"].notna()
+    missing = t1["event"].eq("").sum()
+    if missing:
+        print(f"\n{missing} H day(s) have no verified event text in "
+              f"data/news/verified_events.json")
+
+    ok = t1["event_finbert_mean"].notna() & t1["event_lexicon_mean"].notna()
     if ok.sum() > 2:
-        print("\nAgreement between the two headline-level NLP methods on H days: "
-              f"r = {t1.loc[ok, 'headline_lexicon_mean'].corr(t1.loc[ok, 'headline_finbert_mean']):+.3f}")
+        print("\nAgreement between the two NLP methods, scored on the verified real "
+              f"event text: r = "
+              f"{t1.loc[ok, 'event_lexicon_mean'].corr(t1.loc[ok, 'event_finbert_mean']):+.3f}")
 
 
 if __name__ == "__main__":

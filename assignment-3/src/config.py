@@ -50,8 +50,15 @@ TIMELINE_QUERIES = {
 
 GDELT_DOC = "https://api.gdeltproject.org/api/v2/doc/doc"
 MAX_RECORDS = 250          # GDELT's per-request cap on artlist
-GDELT_SLEEP = 7.0          # seconds between requests (their published rate limit is 5)
-GDELT_MAX_RETRIES = 4      # per pass; script 01 makes several passes over missing days
+GDELT_SLEEP = 22.0         # seconds between requests. Their published rate limit is
+                           # 5s, but in practice refusals persist at much wider
+                           # spacing too (empirically ~20-30% of requests still fail
+                           # at 7-16s); a single request after a 30s idle gap
+                           # succeeded reliably in testing, suggesting a per-minute
+                           # bucket rather than a simple per-request cooldown.
+GDELT_MAX_RETRIES = 2      # per pass, at the wider spacing above; script 01/04 make
+                           # several passes over whatever is still missing rather
+                           # than retrying the same day repeatedly in a tight loop
 GDELT_PASSES = 8
 
 # ---------------------------------------------------------------- market data
