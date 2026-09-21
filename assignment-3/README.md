@@ -2,19 +2,17 @@
 
 FRE-GY 7871 A · NLP and the Investment Process · Fall 2026
 
-**Version 2**, updated per the professor's additional guidance: real news sourcing
-(replacing Wikipedia), a three-regime extension (bad/good/no war news), and a direct,
-tested answer to "is heteroskedasticity-based identification the best approach" —
-implemented as two working alternatives run head-to-head against the headline method,
-plus a literature review of others considered and not implemented. See `REPORT.md`
-for the full write-up and `SUMMARY.md` for a plain-language version; both have PDFs.
-
 A replication of Rigobon and Sack, *The Effects of War Risk on U.S. Financial
 Markets* (NBER 9609, 2003), applied to the 2026 Iran war, with the day-selection
-step — the one step those authors did by hand — done with NLP instead, following the
-professor's framing directly: **flag each trading day 1 (high war-news) or 0
-(otherwise) from NLP, then let heteroskedasticity-based identification do the
-estimating.**
+step — the one step those authors did by hand — done with NLP instead: **flag each
+trading day 1 (high war-news) or 0 (otherwise) from NLP, then let
+heteroskedasticity-based identification do the estimating.** The pipeline also
+implements and tests two concrete alternatives to that identification strategy
+(a supervised/unsupervised day-classification comparison, and a plain event-study
+regression run head-to-head against the headline method), a three-regime extension
+of the two-regime framework, and a quantified check on the lexicon's vocabulary
+coverage. See `REPORT.md` for the full write-up and `SUMMARY.md` for a
+plain-language version; both have PDFs.
 
 This folder is self-contained: run the scripts in order to rebuild everything from
 scratch, then open `analysis.ipynb`. No data files are checked into git; `data/` is
@@ -73,11 +71,11 @@ python 10_novel_phrasing.py
 python 11_compare_methods.py
 ```
 
-`01` talks to GDELT's *timeline* endpoint, which works reliably (used unchanged from
-version 1) but still refuses an occasional request; it caches each series to its own
-CSV and skips what it already has, so re-running is safe. GDELT's *article* endpoint
-does not work reliably enough within a session to source Table 1 — see "Why Table 1's
-sources were hand-verified" below.
+`01` talks to GDELT's *timeline* endpoint, which works reliably but still refuses an
+occasional request; it caches each series to its own CSV and skips what it already
+has, so re-running is safe. GDELT's *article* endpoint does not work reliably enough
+within a session to source Table 1 — see "Why Table 1's sources were hand-verified"
+below.
 
 Then open `analysis.ipynb`, or build the PDFs directly:
 `python build_report_pdf.py` (full technical report) and
@@ -102,47 +100,47 @@ individual requests. This was tested at three request spacings (7s, 16s, 22s) wi
 to 10 retry passes and 45-second cooldowns between passes, and none reliably cleared
 whatever throttling this session's requests hit — a sustained run at 22-second spacing
 produced zero successes across five minutes of continuous attempts. Wikipedia's
-Current Events Portal (used in version 1) doesn't throttle, but is a tertiary,
-community-edited source, not journalism — a fair criticism. **Table 1's 18 event
-descriptions were instead compiled through targeted, one-day-at-a-time research
+Current Events Portal doesn't throttle, but is a tertiary, community-edited source,
+not journalism. **Table 1's 18 event descriptions were instead compiled through
+targeted, one-day-at-a-time research
 against Al Jazeera, CNN and Bloomberg reporting**, each with a source URL, stored in
 `data/news/verified_events.json`. This is a one-time manual verification step that
 runs *after* day-selection is complete — it does not affect which days are flagged or
 any estimation result, only what Table 1 prints next to each date.
 
 **The three NLP measures** (`scripts/03_score_news.py`), each standardised and
-averaged into one war-news score, unchanged from version 1: **attention** (coverage
-volume vs. its trailing baseline), **direction** (escalation vs. de-escalation
-coverage share — used for the new three-regime split in Section 4 of the report, not
-for day-selection), and **contest** (how split the coverage was, capturing "Unclear"
-days that carry real information for a variance-based method even without a clear
-sign).
+averaged into one war-news score: **attention** (coverage volume vs. its trailing
+baseline), **direction** (escalation vs. de-escalation coverage share — used for the
+three-regime split in Section 4 of the report, not for day-selection), and
+**contest** (how split the coverage was, capturing "Unclear" days that carry real
+information for a variance-based method even without a clear sign).
 
 **Day sets.** Every trading day gets a binary `war_news_flag` (1 = high-news, top 18
-of 173 by the news score; 0 = otherwise) — the literal 1/0 classification the
-professor's guidance describes. A matched `set` column additionally marks the L
-subset used for paired estimation (nearest trading day that is neither an H day nor
-adjacent to one, and sits in the quiet half of the news-score distribution — see
-"Three things worth flagging" below for why the quiet-half restriction is necessary).
+of 173 by the news score; 0 = otherwise) — this literal 1/0 classification is what
+feeds the heteroskedasticity estimator. A matched `set` column additionally marks
+the L subset used for paired estimation (nearest trading day that is neither an H
+day nor adjacent to one, and sits in the quiet half of the news-score distribution —
+see "Three things worth flagging" below for why the quiet-half restriction is
+necessary).
 
-**Financial variables, estimator, and normalisation** — all unchanged from version 1:
-eighteen variables across a US, global, and sector block; each estimated against
-Brent (not the paper's two-year yield, which does not respond to 2026's war risk
-strongly enough to serve as the identifying variable — see `REPORT.md` Section 0/3);
-all three instrument sets (ω₁, ω₂, ω₃), heteroskedasticity-robust standard errors.
+**Financial variables, estimator, and normalisation.** Eighteen variables across a
+US, global, and sector block; each estimated against Brent (not the paper's
+two-year yield, which does not respond to 2026's war risk strongly enough to serve
+as the identifying variable — see `REPORT.md` Section 0/3); all three instrument
+sets (ω₁, ω₂, ω₃), heteroskedasticity-robust standard errors.
 
-## What's new in this version
+## Additional analysis beyond the core replication
 
-**Three regimes, not two** (`scripts/07_regimes.py`). The professor's suggested
-extension: split war-news days into bad-news (coverage skews escalatory),
-good-news (skews de-escalatory), and no-news. A simple mean-comparison across these
-three groups matches the professor's qualitative hypothesis on **7 of 7** core
-variables (yields/oil/VIX up and equities down on bad-news days; several reverse on
-good-news days) — see Table 7 / Figure 6. A stricter, IV-based overidentification
-test (estimating the response separately from bad-news and good-news sub-samples,
-following Rigobon 2003's multi-regime framework) agrees in sign on 10/17 variables —
-an honest, noisier result given sub-sample sizes of 4 and 8, reported alongside the
-cleaner descriptive finding rather than in place of it.
+**Three regimes, not two** (`scripts/07_regimes.py`). War-news days are split into
+bad-news (coverage skews escalatory), good-news (skews de-escalatory), and no-news.
+A simple mean-comparison across these three groups matches the expected qualitative
+pattern on **7 of 7** core variables (yields/oil/VIX up and equities down on
+bad-news days; several reverse on good-news days) — see Table 7 / Figure 6. A
+stricter, IV-based overidentification test (estimating the response separately from
+bad-news and good-news sub-samples, following Rigobon 2003's multi-regime
+framework) agrees in sign on 10/17 variables — an honest, noisier result given
+sub-sample sizes of 4 and 8, reported alongside the cleaner descriptive finding
+rather than in place of it.
 
 **Two alternative day-classification methods** (`scripts/08_classify_days.py`): a
 cross-validated logistic regression (features: the NLP measures; label: an
@@ -158,18 +156,18 @@ schemes; VIX and the dollar are more sensitive to the choice.
 **The event-study alternative, run head-to-head** (`scripts/09_event_study.py`). The
 most standard alternative to heteroskedasticity — regress each variable's change on
 the same 1/0 flag, plain OLS — finds **zero of eighteen** variables significant at
-5%, against heteroskedasticity's 13 of 17 on the identical days. This is the report's
-central piece of evidence for why the variance-based method, not the more familiar
-mean-based one, is the right tool here: mixed-direction war news (8 escalatory, 4
-de-escalatory, 6 unclear, among the 18 selected days) washes out in a simple average
-but not in a variance comparison.
+5%, against heteroskedasticity's 13 of 17 on the identical days. This is the
+strongest piece of evidence for why the variance-based method, not the more
+familiar mean-based one, is the right tool here: mixed-direction war news (8
+escalatory, 4 de-escalatory, 6 unclear, among the 18 selected days) washes out in a
+simple average but not in a variance comparison.
 
-**A quantified vocabulary-coverage check** (`scripts/10_novel_phrasing.py`), directly
-addressing the professor's "novel phrasing" concern: 52.5% of real, war-relevant
-sentences from the verified event text score zero hits against the hand-built
-lexicon (facility names, invented compound nouns like "rogue supertankers," and named
-agreements the lexicon could not have anticipated). This affects sentence-level
-lexicon scoring, not the aggregate coverage-volume measure the day-selection runs on.
+**A quantified vocabulary-coverage check** (`scripts/10_novel_phrasing.py`): 52.5%
+of real, war-relevant sentences from the verified event text score zero hits
+against the hand-built lexicon (facility names, invented compound nouns like "rogue
+supertankers," and named agreements the lexicon could not have anticipated). This
+affects sentence-level lexicon scoring, not the aggregate coverage-volume measure
+the day-selection runs on.
 
 **A literature review of further alternatives** (Geopolitical Risk Index, Economic
 Policy Uncertainty Index, Markov-switching volatility regimes, structural VAR with

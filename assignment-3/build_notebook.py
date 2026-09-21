@@ -312,14 +312,14 @@ the response is contemporaneous and complete within the day: Middle East news ge
 breaks during Asian and European hours, and by the following session it is in the price.
 The same-day convention is the right one, and there is no delayed drift to collect.""")
 
-md("""# Version 2 — the professor's additional guidance
+md("""# Extending the analysis
 
-The professor's follow-up guidance confirmed the core design (flag days 1/0 from NLP,
-let heteroskedasticity do the estimating — exactly what Sections 1-7 above do) and
-asked for four more things: a more reliable news source than Wikipedia, the three
-replicated tables (already done above), a three-regime split (bad/good/no war news),
-and a direct, tested answer to "is heteroskedasticity the best approach," with
-alternatives identified and evaluated. Sections 9-16 below address each in turn.""")
+Sections 1-7 above replicate the paper's core design: flag days 1/0 from NLP, let
+heteroskedasticity do the estimating. Sections 9-16 below extend that in four
+directions: a more reliable news source than Wikipedia, a three-regime split
+(bad/good/no war news), a direct, tested answer to "is heteroskedasticity the best
+approach" with concrete alternatives, and a quantified check of the lexicon's
+vocabulary coverage.""")
 
 code("""t7 = pd.read_csv(TABLES / "table7_regime_mean_comparison.csv")
 t8 = pd.read_csv(TABLES / "table8_regime_overidentification.csv")
@@ -333,8 +333,8 @@ print("Loaded Tables 7-14")""")
 
 md("""## 9. Sourcing news reliably
 
-Wikipedia's Current Events Portal (used for Table 1's event descriptions in version 1)
-is a tertiary, community-edited summary, not journalism - a fair criticism. GDELT's
+Wikipedia's Current Events Portal, used for Table 1's event descriptions in an
+earlier pass, is a tertiary, community-edited summary, not journalism. GDELT's
 *article* endpoint (real news-wire content, with each record's publishing domain
 attached) was tried as the fix, restricted to only the ~36 selected days. It was tested
 at three request spacings (7s, 16s, 22s) with up to 10 retry passes and 45-second
@@ -372,16 +372,17 @@ shows concretely by demonstrating what goes wrong when it isn't.""")
 
 md("""## 11. Extension 1 - three regimes, not two
 
-The professor's suggested extension: split war-news days into bad-news (coverage
-skews escalatory), good-news (skews de-escalatory), and no-news, built from the
-`direction` measure already computed for Table 1.""")
+War-news days can be split into bad-news (coverage skews escalatory), good-news
+(skews de-escalatory), and no-news, built from the `direction` measure already
+computed for Table 1. This follows Rigobon (2003, section II.C)'s multi-regime
+extension of the same estimator.""")
 
 code("""hyp = ["y2", "y10", "brent", "spx", "stoxx", "vix", "hy"]
 show = t7[t7["column"].isin(hyp)][["variable", "mean_Bad-news", "mean_Good-news",
                                     "mean_No-news"]]
 print(show.to_string(index=False, float_format=lambda v: f"{v:9.4f}"))""")
 
-md("""All seven core variables match the professor's hypothesised sign on bad-news
+md("""All seven core variables match the expected sign on bad-news
 days using nothing more than simple conditional means: yields, oil and the VIX rise;
 equities fall. Good-news days largely reverse it (S&P +0.79% vs -0.14% on bad-news
 days; VIX -0.85 vs +0.69).
@@ -485,11 +486,11 @@ heuristic versus heteroskedasticity-classifier, which agree on 7/10 - failing on
 VIX, dollar and gold, precisely the three variables already flagged as riding on a
 near-random classifier day-set.""")
 
-md("""## 15. Vocabulary coverage - the "novel phrasing" concern, quantified
+md("""## 15. Vocabulary coverage of the lexicon
 
-The professor's second concern: legacy dictionaries may miss new war-specific
-vocabulary. Checked directly against the verified real-news text, sentence by
-sentence, against the hand-built lexicon.""")
+A fixed phrase list built in advance cannot anticipate the specific vocabulary a
+live, unfolding conflict generates. Checked directly against the verified real-news
+text, sentence by sentence, against the hand-built lexicon.""")
 
 code("""print(t13.to_string(index=False))""")
 
@@ -505,11 +506,11 @@ phrase-matching, so it is unaffected. The honest fix (not built as a full pipeli
 step here, for scope) is an LLM reading the text in context rather than a fixed
 phrase list.""")
 
-md("""## 16. Benchmark against the professor's 2003 priors
+md("""## 16. Comparison against the 2003 episode
 
-The professor's guidance: oil, credit spreads and equities should move like 2003, but
-yields should flip given higher inflation, debt concerns, weaker flight-to-quality,
-and US oil output now ~14M bbl/day versus ~6M in 2003.
+An economically motivated prior: oil, credit spreads and equities should move like
+2003, but yields should flip given higher inflation, debt concerns, weaker
+flight-to-quality, and US oil output now ~14M bbl/day versus ~6M in 2003.
 
 | | 2003 | 2026 | Matches prior? |
 |---|---|---|---|
