@@ -111,6 +111,18 @@ supplied to the code; they fall out of the coverage measures. The direction meas
 correlates −0.63 with GDELT's independently computed tone series, with the expected sign
 (escalation coverage reads as more negative news).
 
+Figure 1 makes this visual: the top panel is the daily war-risk score with the 18
+selected H days marked in red, and the two panels below plot Brent and the two-year
+yield over the same dates with the same days marked as vertical bands, so the reader
+can check by eye whether the flagged days line up with real market moves rather than
+taking the correlation number above on faith. The tallest spike in the top panel is
+28 February itself; the score sits in a mostly negative range through January and
+February (ordinary background chatter, not a war), rises to a dense, elevated cluster
+through March (the most intense fighting), and falls back to a low, occasional-spike
+pattern from May onward. The Brent panel climbs steadily across this window; the
+two-year panel is visibly choppier and less obviously tied to the marked days — an
+early visual hint of the section below.
+
 ![Figure 1](figures/figure1_war_news_index.png)""")
 
 md("""## 2. Table 1 — the days the index selects
@@ -169,6 +181,20 @@ estimator's denominator — precisely the rank-condition failure Rigobon (2003) 
 about. **Brent takes the two-year yield's role**, and both normalisations are reported
 below so the comparison is visible.
 
+Figure 2 shows this ratio for every variable, sorted, so the pattern is visible at a
+glance rather than read off a table: oil at the top (6.2×), the VIX (4.7×) and Tel
+Aviv equities (3.6×) not far behind, and Treasuries, gold and break-even inflation
+clustered at the bottom near or below the no-effect line at 1×. One pairing is worth
+flagging now, ahead of the coefficient table below: Tel Aviv's bar here is the
+third-highest in the whole chart, yet its estimated coefficient turns out to be
+statistically indistinguishable from zero. Those two facts sit together comfortably —
+a variable can be genuinely noisier on war-news days for reasons specific to it
+(Israel-specific wartime news, not the oil-and-risk-sentiment channel that moves
+everything else) without that extra noise being explained by the *shared* factor the
+other variables respond to. Figure 2 answers "is this variable more volatile on war
+days"; the coefficient in Table 2 answers "is that volatility the same common war-risk
+factor everyone else is exposed to" — and for Tel Aviv those two answers diverge.
+
 ![Figure 2](figures/figure2_variance_ratio.png)""")
 
 md("""## 4. Table 2 — the estimates
@@ -187,7 +213,19 @@ print(f"Response to {NORMALISATION_LABEL}\\n")
 print(out.to_string(index=False, float_format=lambda v: f"{v:9.3f}"))
 print("\\n*** p<1%, ** p<5%, * p<10% (on the combined instrument)")""")
 
-md("""![Figure 3](figures/figure3_coefficients.png)
+md("""Figure 3 is the point-and-interval version of the table above, split into four
+panels by unit (percent, percentage-point, index-point, and dollar changes cannot
+share an axis) — each dot a coefficient, the bar through it a 95% interval, coloured
+red or blue when the interval clears zero and grey when it does not. Two things are
+easier to see here than in the table: the equity panel sorts cleanly into a single
+red bar (US energy) on the positive side against a wall of blue bars (S&P, Euro
+Stoxx, Nikkei, EM, airlines) on the negative side - the cross-sectional signature of
+an oil-supply shock, visible at a glance - and the *width* of each interval is doing
+real work: Tel Aviv's bar is wide enough to straddle zero by a large margin (the
+weak-ω₂-instrument problem quantified in Section 6 below), which is a different and
+more informative statement than simply "not significant."
+
+![Figure 3](figures/figure3_coefficients.png)
 
 **What happens when Iranian war risk rises.** Global equities fall, and they fall *more
 outside the United States* than inside it: the S&P drops 0.65%, but the Euro Stoxx 1.37%,

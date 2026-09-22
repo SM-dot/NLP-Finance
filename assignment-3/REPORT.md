@@ -77,6 +77,34 @@ holds: variance of the change in Brent (the normalising variable — Section 3 b
 explains why the paper's own choice, the two-year yield, does not work in 2026) is
 6.21× higher on H days than on the matched L days.
 
+![Figure 1](figures/figure1_war_news_index.png)
+
+**What Figure 1 shows.** The top panel is the daily NLP war-risk score for every
+trading day in the window, with the 18 selected H days marked in red; the two panels
+below plot the actual level of Brent crude and the two-year Treasury yield over the
+same dates, with the same 18 days marked as vertical bands so the reader can check
+by eye whether the days the index flags line up with real inflection points in the
+market.
+
+**Why it matters, and how to read it.** Nothing about the true chronology of the war
+was given to the scoring code — it only ever sees GDELT coverage volume and an
+escalation/de-escalation word balance. So this figure is the visual version of the
+identifying assumption: if the red-marked days did not correspond to real moves in
+Brent, the whole exercise would be measuring noise. They do. The single tallest spike
+in the top panel falls on February 28 — the day the war began — and the index rises
+in a step from a mostly-negative range in January and February (the pre-war period,
+where the score sits below its own zero line — ordinary geopolitical chatter, not a
+war) to a visibly elevated, clustered band through March, which is exactly the most
+intense phase of the conflict on the ground: nearly half of the 18 selected days fall
+in that single month. The index falls off through April and settles into a low,
+occasional-spike pattern from May onward, punctuated by two isolated flare-ups in
+late June and mid-July that correspond to the ceasefire's collapse and the resumption
+of strikes on shipping in the Strait of Hormuz. The Brent panel shows the price level
+climbing through this same window and the two-year yield panel shows a much choppier,
+less visually dramatic series — a first hint, well before Section 3's formal
+treatment, that Brent is tracking the war-risk factor far more visibly than the
+Treasury yield is.
+
 **Table 2. Estimated impact of a war-risk increase that raises Brent $5/bbl**
 (combined instrument ω₃)
 
@@ -103,6 +131,33 @@ explains why the paper's own choice, the two-year yield, does not work in 2026) 
 13 of 17 variables (76%) significant at 5%. This count matters directly for
 Section 5 below.
 
+![Figure 3](figures/figure3_coefficients.png)
+
+**What Figure 3 shows.** The point-and-interval version of Table 2, split into four
+panels by unit — percent changes, percentage-point changes, index points (VIX), and
+dollar changes — because a $37 move in gold and a 0.65 percentage-point move in a
+credit spread are not lengths that belong on the same axis. Each dot is a
+coefficient; the horizontal bar through it is the 95% confidence interval; red marks
+a significant positive coefficient, blue a significant negative one, and grey marks
+an estimate whose interval crosses zero.
+
+**Why it matters, and how to read it.** This is the single chart a reader should
+look at first to get the shape of the whole result before working through the
+numbers in Table 2. Two things jump out immediately that are easy to miss in a table
+of seventeen rows. First, the equity panel sorts cleanly into a red producer bloc
+(US energy) sitting alone on the positive side against a wall of blue consumer/
+importer-economy bars (S&P, Euro Stoxx, Nikkei, EM, airlines) on the negative side —
+the cross-sectional signature of an oil-supply shock, visible at a glance rather than
+requiring a row-by-row read of signs. Second, the width of the intervals is doing as
+much work as their position: Tel Aviv's interval is enormous and straddles zero by a
+wide margin (this is the ω₂-instrument weakness flagged in Section 3, visible here as
+a bar that is simply too wide to say anything), while the credit-spread and equity
+intervals are comparatively tight and sit clearly off zero. A bar whose interval
+crosses zero is not "no effect" — it is "not enough precision in an 18-day sample to
+distinguish this estimate from zero," and the chart makes that distinction between
+imprecision and a genuine null finding (Tel Aviv, defence) visible in a way the
+t-statistics column in Table 2 states numerically but doesn't show.
+
 **Table 3. Variance explained by the war-risk factor**
 
 | Variable | % of variance, H days | % of variance, whole window |
@@ -125,9 +180,41 @@ Section 5 below.
 | Aerospace & defence | 8.0% | 1.3% |
 | Tel Aviv 125 | 0.1% | 0.0% |
 
-![Figure 1](figures/figure1_war_news_index.png)
 ![Figure 2](figures/figure2_variance_ratio.png)
-![Figure 3](figures/figure3_coefficients.png)
+
+**What Figure 2 shows.** For each variable, the ratio of its variance on the 18
+H days to its variance on the 18 matched L days — how much more a variable actually
+moves around on war-news days than on ordinary ones. This is the raw material Table
+3's percentages are built from: Table 3 asks how much of a variable's *extra*
+variance on H days is explained by the *shared* war-risk factor specifically, while
+Figure 2 shows the simpler, prior question of how much extra variance there is at
+all. Bars are coloured blue where the ratio exceeds 1 (more volatile on war days, as
+the identification strategy requires) and grey where it does not.
+
+**Why it matters, and how to read it.** Every variable used in estimation needs a
+ratio above 1 for the method to have any power to measure it — a ratio at or below 1
+means "no more volatile on war-news days than on any other day," which is a variable
+the war factor cannot be said to move at all. Oil sits at the top at 6.2×, the VIX at
+4.7×, and Tel Aviv equities at 3.6×; the two-year Treasury yield (1.05×), gold
+(1.03×), break-even inflation (0.97×) and the ten-year yield (0.84×, *below* 1) sit
+at the bottom, clustered around the no-effect line. This is the figure that makes
+concrete why the two-year yield cannot serve as the normalising variable here the way
+it did in the original 2003 study: it simply is not more volatile on Iran war-news
+days, so there is no elevated variance to divide by, whatever the ratio Brent shows.
+
+**A pairing worth noticing between this figure and Table 2/3.** Tel Aviv's bar here
+is the third-highest in the whole chart (3.6×) — Israeli equities are genuinely much
+more volatile on war-news days — yet Table 2's coefficient for Tel Aviv is
+statistically indistinguishable from zero, and Table 3 attributes essentially none of
+that extra variance (0.1%) to the shared war-risk factor. Those two facts are not in
+tension: a variable can be highly volatile on war-news days for reasons specific to
+that market (local political or wartime-economy news out of Israel, distinct from
+the oil-and-risk-sentiment channel that moves everything else) without that
+volatility being *driven by the same common factor* the other seventeen variables
+share. Figure 2 answers "is this variable noisier on war days," and Table 2/3 answer
+"is that extra noise the same war-risk factor everyone else is responding to" — Tel
+Aviv is a clean example of a variable where the answer to the first question is yes
+and the answer to the second is no.
 
 ## 3. Is heteroskedasticity-based identification the best approach?
 
