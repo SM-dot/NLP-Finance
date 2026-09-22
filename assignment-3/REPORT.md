@@ -49,27 +49,33 @@ to throw those days out or guess at their direction. This one does not.
 
 ## Building the signal from the news
 
-Every trading day between January and mid-September 2026 gets a single flag — high
-war-news day or not — built from GDELT's coverage of Iran-related reporting: how
-much coverage there was relative to its own recent baseline, how far the balance of
-escalation-versus-de-escalation language moved, and how contested that balance was
-on a given day. Eighteen of 173 trading days clear the bar, roughly the top decile,
-comparable in scale to the seventeen days Rigobon and Sack identified by hand for
-Iraq. A matched set of eighteen quiet days, chosen to sit as close in time as
-possible without themselves being newsy, anchors the comparison.
+Every trading day between January and mid-September 2026 gets a single binary
+flag — **1 if it is a high war-news day, 0 otherwise** — built from GDELT's
+coverage of Iran-related reporting: how much coverage there was relative to its own
+recent baseline, how far the balance of escalation-versus-de-escalation language
+moved, and how contested that balance was on a given day. Eighteen of 173 trading
+days clear the bar, roughly the top decile, comparable in scale to the seventeen
+days Rigobon and Sack identified by hand for Iraq. A matched set of eighteen quiet
+(flag = 0) days, chosen to sit as close in time as possible without themselves
+being newsy, anchors the comparison. That flag is the only input the estimator
+needs — it never sees the direction of any story, only whether a day was unusually
+newsy.
 
-Sourcing real reporting to describe what happened on those eighteen days turned out
-to be harder than expected. GDELT's own article-level search does index real
-outlets — the underlying feed carries publisher domains like reuters.com and
-aljazeera.com — but a systematic attempt to pull headlines through it, tested at
-several request speeds with generous retry logic, could not reliably get through
-its rate limiting within a session. Rather than fall back on a tertiary source like
-an encyclopedia's own event summary, each of the eighteen days below was checked by
-hand against dated Al Jazeera, CNN and Bloomberg reporting, with a source link kept
-for every entry. That verification runs after the day-selection is already
-finished — the flagging itself never sees this text — so it changes only what gets
-printed next to each date, not which days were chosen or any of the results that
-follow.
+News for the day-flagging itself comes from GDELT, a free, keyless public feed —
+no proprietary news connector was available in the environment this analysis was
+built in, so GDELT's coverage-volume data serves the role a subscription feed
+covering major outlets would otherwise play. Sourcing real reporting to *describe*
+what happened on the eighteen flagged days turned out to be a separate and harder
+problem. GDELT's own article-level search does index real outlets — the underlying
+feed carries publisher domains like reuters.com and aljazeera.com — but a
+systematic attempt to pull headlines through it, tested at several request speeds
+with generous retry logic, could not reliably get through its rate limiting within
+a session. Rather than fall back on a tertiary source like an encyclopedia's own
+event summary, each of the eighteen days below was checked by hand against dated Al
+Jazeera, CNN and Bloomberg reporting, with a source link kept for every entry. That
+verification runs after the day-selection is already finished — the flagging itself
+never sees this text — so it changes only what gets printed next to each date, not
+which days were chosen or any of the results that follow.
 
 ## The eighteen days that defined the war-risk narrative
 
