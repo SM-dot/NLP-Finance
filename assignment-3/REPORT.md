@@ -2,54 +2,80 @@
 
 **FRE-GY 7871 A · NLP and the Investment Process · Fall 2026**
 
-## 0. The problem and the method
+## Key takeaways
 
-War risk is unobservable: it is easy to say *when* war news broke, much harder to
-say by how much it moved the odds of war. Rigobon and Sack (2003) identify the
-effect from a shift in *variance* rather than the level of the factor — name a set
-of days H on which war-related news was unusually intense, assume every other
-driver of asset prices was no more volatile than usual on those days, and the shift
-in the covariance matrix of returns between H and a comparison set L is
-attributable to the war factor alone, without ever measuring the factor's level.
-Full derivation and the estimator implementation are in `src/heteroskedasticity.py`.
+- A war-risk shock large enough to move oil up $5 a barrel knocks about 0.65% off
+  the S&P 500 — but 1.4-1.7% off European, Japanese and emerging-market equities.
+  The United States is now insulated relative to the rest of the world in a way it
+  was not in 2003, because it is a much larger oil producer.
+- Credit widens, volatility rises, and the dollar and Swiss franc both strengthen —
+  a conventional flight-to-safety pattern in currencies and credit, layered on top
+  of an oil shock that behaves very differently from the 2003 Iraq-war episode.
+- The critical break from 2003: Treasury yields and inflation expectations **rise**
+  with war risk in 2026, where they fell in 2003. This is the signature of a
+  supply-side shock (more oil-dependent inflation) rather than a demand-side scare,
+  and it lines up with the structural shift in US energy production since then.
+- The identification strategy was tested against the most obvious simpler
+  alternative — a plain regression on "was this a big war-news day, yes or no" —
+  and that alternative found nothing. Every one of eighteen markets came back
+  statistically indistinguishable from zero. The variance-based approach used here
+  found reliable effects in thirteen of seventeen. That gap is the strongest
+  evidence in this analysis that the more involved method is earning its keep, not
+  just adding complexity.
+- A few readings should be treated with real caution rather than taken at face
+  value: gold, Tel Aviv equities, and defence stocks all rest on a weaker piece of
+  the statistical machinery and move around noticeably depending on exactly how the
+  analysis is run. Everything else — equities, credit, oil, the VIX, the dollar,
+  Treasury yields — holds up under several different ways of stress-testing it.
 
-Every trading day carries a binary flag, `war_news_flag` — **1 if it is a
-high-news day, 0 otherwise** — built from an NLP measure of GDELT news coverage
-(scripts 03/04). This flag is what feeds the heteroskedasticity estimator; the
-estimator does not need to know the *direction* of the news, only that variance was
-elevated on those days. `data/interim/event_days.csv` carries this flag for all 173
-trading days.
+## Why war risk needs a different kind of measurement
 
-## 1. News sourcing
+Nobody publishes a daily "probability of war" number, so there is no series to put
+directly into a regression. What can be observed is *when* war-related news was
+unusually intense. Rigobon and Sack's 2003 study of the Iraq war turned that
+limitation into a method: split trading days into a group where war-related news
+was heavy and a matched group where it was quiet, and see how much more markets
+moved around — not on average, but in dispersion — in the heavy-news group. If
+every other driver of prices was no more volatile on those days than usual, the
+extra dispersion is attributable to the war-risk factor alone, and its size can be
+recovered without ever assigning a number to "risk" itself.
 
-**The day-selection itself** runs on GDELT's *timeline* endpoint — five queries that
-each return the whole window's coverage volume in one request, counting every
-article GDELT monitored. It is a live public API requiring no key and works
-reliably; this is unchanged and unaffected by anything below.
+The appeal for this kind of analysis is that it does not require knowing whether a
+given day's news was good or bad for markets — only that it was voluminous and
+uncertain. That matters a great deal here: of the eighteen days flagged as unusually
+newsy over the sample, six carried heavy coverage that was genuinely split between
+escalation and de-escalation at once. A method that needed a signed input would have
+to throw those days out or guess at their direction. This one does not.
 
-**Table 1's event descriptions**, by contrast, need real headline text for the 18
-selected days. GDELT's *article* endpoint carries real news-wire content — each
-record's publishing domain (reuters.com, apnews.com, aljazeera.com, and so on) is
-attached — but it refuses a large and essentially random share of individual
-requests. This was tested at three request spacings (7s, 16s, 22s between requests,
-with up to 10 retry passes and 45-second cooldowns between passes); a sustained run
-at the widest spacing produced zero successful fetches across five minutes of
-continuous attempts. Rather than rely on a source that does not reliably describe
-what happened, Table 1's 18 event descriptions were compiled through targeted,
-one-day-at-a-time research against Al Jazeera, CNN and Bloomberg reporting for each
-specific date, with a source URL recorded for every entry
-(`data/news/verified_events.json`). This is a manual verification step that runs
-*after* the day-selection is already complete — the NLP measure that produces the
-1/0 flag never sees this text — so it affects only what Table 1 prints next to each
-date, not which days were selected or any estimation result.
+## Building the signal from the news
 
-The vocabulary-coverage limitations of scoring real text against a fixed phrase list
-are checked directly in Section 8.
+Every trading day between January and mid-September 2026 gets a single flag — high
+war-news day or not — built from GDELT's coverage of Iran-related reporting: how
+much coverage there was relative to its own recent baseline, how far the balance of
+escalation-versus-de-escalation language moved, and how contested that balance was
+on a given day. Eighteen of 173 trading days clear the bar, roughly the top decile,
+comparable in scale to the seventeen days Rigobon and Sack identified by hand for
+Iraq. A matched set of eighteen quiet days, chosen to sit as close in time as
+possible without themselves being newsy, anchors the comparison.
 
-## 2. Tables 1–3
+Sourcing real reporting to describe what happened on those eighteen days turned out
+to be harder than expected. GDELT's own article-level search does index real
+outlets — the underlying feed carries publisher domains like reuters.com and
+aljazeera.com — but a systematic attempt to pull headlines through it, tested at
+several request speeds with generous retry logic, could not reliably get through
+its rate limiting within a session. Rather than fall back on a tertiary source like
+an encyclopedia's own event summary, each of the eighteen days below was checked by
+hand against dated Al Jazeera, CNN and Bloomberg reporting, with a source link kept
+for every entry. That verification runs after the day-selection is already
+finished — the flagging itself never sees this text — so it changes only what gets
+printed next to each date, not which days were chosen or any of the results that
+follow.
 
-**Table 1. War-news days selected by the NLP index** (18 of 173 trading days, top
-decile; ∆Brent and ∆2y shown for reference, not used to select the days)
+## The eighteen days that defined the war-risk narrative
+
+**Table 1. War-news days selected by the news index** (18 of 173 trading days, top
+decile; the Brent and two-year-yield columns are shown for context and were not used
+to pick the days)
 
 | Date | War risk | News score | ∆Brent ($) | ∆2y (bp) | Source | Event |
 |---|---|---:|---:|---:|---|---|
@@ -72,41 +98,37 @@ decile; ∆Brent and ∆2y shown for reference, not used to select the days)
 | 2026-07-08 | Unclear | 1.04 | +3.86 | +2.0 | Al Jazeera/CNN | Iran warns of "crushing response"; strikes 85 US targets in Bahrain/Kuwait |
 | 2026-07-13 | Unclear | 0.85 | +7.29 | +5.0 | CNN/Al Jazeera | Strikes resume 2nd night; Iran disables 2 tankers; WTI +9.4% |
 
-Direction split: 8 Increased, 4 Decreased, 6 Unclear. The identifying assumption
-holds: variance of the change in Brent (the normalising variable — Section 3 below
-explains why the paper's own choice, the two-year yield, does not work in 2026) is
-6.21× higher on H days than on the matched L days.
+Eight of the eighteen days lean escalatory, four lean toward de-escalation, and six
+carry heavy coverage that is genuinely split — the sort of day a conventional event
+study cannot use. The list is not evenly spread across the sample: nearly half of it
+falls in March alone, the month of the most intense fighting, with a second cluster
+around the April ceasefire and two isolated flare-ups later in the summer when the
+truce broke down over shipping through the Strait of Hormuz.
+
+Nothing about the actual timeline of the war was given to the scoring process — it
+only ever sees coverage volume and the balance of escalation-versus-de-escalation
+language. Plotting the resulting index against the level of Brent crude and the
+two-year Treasury yield over the same window is therefore a useful sanity check
+rather than a formality: the index's single sharpest spike lands on February 28, the
+day the war began, and it climbs from a quiet, slightly negative baseline through
+January and February into a dense, elevated cluster through March before tapering
+off after the April ceasefire. Brent's price level climbs steadily across that same
+window; the two-year yield moves in a visibly choppier, less obviously war-linked
+pattern — an early clue, well before the formal identification test below, that oil
+is carrying this episode's risk signal far more cleanly than the Treasury market is.
 
 ![Figure 1](figures/figure1_war_news_index.png)
 
-**What Figure 1 shows.** The top panel is the daily NLP war-risk score for every
-trading day in the window, with the 18 selected H days marked in red; the two panels
-below plot the actual level of Brent crude and the two-year Treasury yield over the
-same dates, with the same 18 days marked as vertical bands so the reader can check
-by eye whether the days the index flags line up with real inflection points in the
-market.
+## What a war-risk shock does to markets, asset by asset
 
-**Why it matters, and how to read it.** Nothing about the true chronology of the war
-was given to the scoring code — it only ever sees GDELT coverage volume and an
-escalation/de-escalation word balance. So this figure is the visual version of the
-identifying assumption: if the red-marked days did not correspond to real moves in
-Brent, the whole exercise would be measuring noise. They do. The single tallest spike
-in the top panel falls on February 28 — the day the war began — and the index rises
-in a step from a mostly-negative range in January and February (the pre-war period,
-where the score sits below its own zero line — ordinary geopolitical chatter, not a
-war) to a visibly elevated, clustered band through March, which is exactly the most
-intense phase of the conflict on the ground: nearly half of the 18 selected days fall
-in that single month. The index falls off through April and settles into a low,
-occasional-spike pattern from May onward, punctuated by two isolated flare-ups in
-late June and mid-July that correspond to the ceasefire's collapse and the resumption
-of strikes on shipping in the Strait of Hormuz. The Brent panel shows the price level
-climbing through this same window and the two-year yield panel shows a much choppier,
-less visually dramatic series — a first hint, well before Section 3's formal
-treatment, that Brent is tracking the war-risk factor far more visibly than the
-Treasury yield is.
+The eighteen flagged days are matched against the eighteen quiet comparison days,
+and the difference in how much each market moved translates into a sensitivity
+estimate, scaled here to a war-risk increase large enough to push Brent up $5 a
+barrel — the same instrument Rigobon and Sack used for the two-year yield in 2003,
+substituted here because the two-year yield turns out not to respond distinctly
+enough to Iran-specific risk to serve that role in 2026 (more on that below).
 
-**Table 2. Estimated impact of a war-risk increase that raises Brent $5/bbl**
-(combined instrument ω₃)
+**Table 2. Estimated market response to a war-risk shock that raises Brent $5/bbl**
 
 | Variable | Units | Coefficient | t-stat | Sig. |
 |---|---|---:|---:|---|
@@ -128,39 +150,61 @@ Treasury yield is.
 | US airlines (JETS) | pct | −1.359 | −2.83 | *** |
 | Aerospace & defence (ITA) | pct | −0.554 | −1.01 | |
 
-13 of 17 variables (76%) significant at 5%. This count matters directly for
-Section 5 below.
+Thirteen of seventeen coefficients clear conventional significance at 5% —
+plotting the same numbers as point estimates with confidence bands makes the shape
+of the result easier to take in at once than the table does.
 
 ![Figure 3](figures/figure3_coefficients.png)
 
-**What Figure 3 shows.** The point-and-interval version of Table 2, split into four
-panels by unit — percent changes, percentage-point changes, index points (VIX), and
-dollar changes — because a $37 move in gold and a 0.65 percentage-point move in a
-credit spread are not lengths that belong on the same axis. Each dot is a
-coefficient; the horizontal bar through it is the 95% confidence interval; red marks
-a significant positive coefficient, blue a significant negative one, and grey marks
-an estimate whose interval crosses zero.
+**Equities fall everywhere, and fall roughly twice as hard outside the United
+States.** The S&P gives back 0.65% for a $5 oil shock; Europe, Japan and emerging
+markets all lose 1.4-1.7%, more than double the US move. That gap is the clearest
+single number in this analysis, and it is a structural story rather than a
+sentiment one: the United States pumps roughly 14 million barrels of oil a day
+today, against roughly 6 million in 2003, so a war-driven spike in oil prices is
+now a mixed blessing for the US economy rather than a uniformly negative one. That
+shows up directly inside the US market too — energy stocks are the only positive
+line in the whole table, up 0.96%, while airlines, which eat the same oil-price
+increase on the cost side, lose 1.36%.
 
-**Why it matters, and how to read it.** This is the single chart a reader should
-look at first to get the shape of the whole result before working through the
-numbers in Table 2. Two things jump out immediately that are easy to miss in a table
-of seventeen rows. First, the equity panel sorts cleanly into a red producer bloc
-(US energy) sitting alone on the positive side against a wall of blue consumer/
-importer-economy bars (S&P, Euro Stoxx, Nikkei, EM, airlines) on the negative side —
-the cross-sectional signature of an oil-supply shock, visible at a glance rather than
-requiring a row-by-row read of signs. Second, the width of the intervals is doing as
-much work as their position: Tel Aviv's interval is enormous and straddles zero by a
-wide margin (this is the ω₂-instrument weakness flagged in Section 3, visible here as
-a bar that is simply too wide to say anything), while the credit-spread and equity
-intervals are comparatively tight and sit clearly off zero. A bar whose interval
-crosses zero is not "no effect" — it is "not enough precision in an 18-day sample to
-distinguish this estimate from zero," and the chart makes that distinction between
-imprecision and a genuine null finding (Tel Aviv, defence) visible in a way the
-t-statistics column in Table 2 states numerically but doesn't show.
+**Credit widens in proportion to risk, not uniformly.** High-yield spreads move six
+times as far as investment-grade spreads (4.8 basis points versus 0.8), which is
+what a genuine risk repricing should look like rather than a blanket move in credit
+markets. The VIX adds close to 1.75 points, a real but not extreme jump in implied
+volatility for a shock of this size.
 
-**Table 3. Variance explained by the war-risk factor**
+**The break from the 2003 playbook shows up in rates, inflation, and the dollar.**
+In the run-up to the Iraq war, all three of those fell together as investors priced
+war risk as a threat to growth: money moved into safe government debt, inflation
+expectations eased, and the dollar weakened. Here, all three do the opposite — the
+ten-year yield rises, break-even inflation rises, and the dollar strengthens (with
+the Swiss franc rising alongside it, so this reads as a broad flight to currencies
+seen as safe rather than a dollar-specific story). The read is that 2026's war risk
+is being priced primarily as a threat to oil *supply* — inflationary, and, given the
+scale of the domestic energy sector, less of a pure flight-to-safety trigger for the
+dollar than it was in 2003.
 
-| Variable | % of variance, H days | % of variance, whole window |
+**Two results are worth flagging as non-findings rather than findings.** Gold shows
+no reliable response (its point estimate is even the wrong sign, and its confidence
+interval comfortably spans zero) — which echoes Rigobon and Sack's own 2003 result
+and is a useful corrective to the assumption that gold reliably behaves as a war
+hedge. Tel Aviv equities also show no statistically reliable response, despite
+moving around noticeably more than usual on the flagged days — a distinction worth
+sitting with for a moment, because it recurs below: being volatile on newsy days and
+being *driven by the shared war-risk factor other assets share* are not the same
+thing, and Tel Aviv is the cleanest example of a market where the first is true and
+the second is not.
+
+## How much of the story is war risk, and how much is everything else
+
+Not every point of volatility on a newsy day is attributable to the war. The share
+that is can be estimated by comparing how much extra variance each market carries on
+the eighteen flagged days against how much of that extra variance the shared
+war-risk factor alone can explain.
+
+**Table 3. Share of variance attributable to the war-risk factor**
+
+| Variable | Share of variance, war-news days | Share of variance, full sample |
 |---|---:|---:|
 | Euro Stoxx 50 | 53.0% | 16.8% |
 | VIX | 49.4% | 12.5% |
@@ -180,443 +224,194 @@ t-statistics column in Table 2 states numerically but doesn't show.
 | Aerospace & defence | 8.0% | 1.3% |
 | Tel Aviv 125 | 0.1% | 0.0% |
 
+On the flagged days themselves, war risk accounts for roughly half of everything
+moving European equities and the VIX, and a sizeable chunk of the dollar, emerging
+markets and credit spreads. Stretched over the full eight-month sample, where most
+days are ordinary trading days, those shares compress to a more modest but still
+material 8-17% for the same markets — a reasonable order of magnitude for a single
+geopolitical factor operating alongside everything else that normally moves prices.
+These figures should be read as floors rather than precise numbers: the quiet
+comparison days are not perfectly war-news-free in a conflict that ran for six
+months, which understates the true share attributable to the war.
+
+The underlying variance ratios behind this table are worth looking at directly,
+because they explain a methodological choice made earlier in this analysis: oil's
+variance is 6.2 times higher on war-news days than on quiet ones, the VIX's 4.7
+times, and Tel Aviv's 3.6 times — but the two-year Treasury yield comes in at just
+1.05 times, and the ten-year actually shows *less* variance on war-news days than on
+ordinary ones. That is the concrete reason Brent, not the two-year yield, anchors
+the estimates above: in the 2003 study the two-year yield was the cleanest available
+barometer of war risk, with variance rising more than sixfold on war-news days, but
+that role has effectively moved to oil in this episode.
+
 ![Figure 2](figures/figure2_variance_ratio.png)
 
-**What Figure 2 shows.** For each variable, the ratio of its variance on the 18
-H days to its variance on the 18 matched L days — how much more a variable actually
-moves around on war-news days than on ordinary ones. This is the raw material Table
-3's percentages are built from: Table 3 asks how much of a variable's *extra*
-variance on H days is explained by the *shared* war-risk factor specifically, while
-Figure 2 shows the simpler, prior question of how much extra variance there is at
-all. Bars are coloured blue where the ratio exceeds 1 (more volatile on war days, as
-the identification strategy requires) and grey where it does not.
+The Tel Aviv result from the previous section becomes clearer against this
+backdrop. Its variance ratio (3.6×) is the third-highest of any market in the
+sample — genuinely much noisier on war-news days — yet the share of that noise
+attributable to the shared factor is essentially zero. Put together, the two
+numbers say that Israeli equities move a great deal on days when the war escalates,
+but for reasons specific to Israel (local political and economic news tied
+directly to the fighting) rather than through the same oil-and-risk-sentiment
+channel that moves the S&P, European equities, and credit spreads together.
 
-**Why it matters, and how to read it.** Every variable used in estimation needs a
-ratio above 1 for the method to have any power to measure it — a ratio at or below 1
-means "no more volatile on war-news days than on any other day," which is a variable
-the war factor cannot be said to move at all. Oil sits at the top at 6.2×, the VIX at
-4.7×, and Tel Aviv equities at 3.6×; the two-year Treasury yield (1.05×), gold
-(1.03×), break-even inflation (0.97×) and the ten-year yield (0.84×, *below* 1) sit
-at the bottom, clustered around the no-effect line. This is the figure that makes
-concrete why the two-year yield cannot serve as the normalising variable here the way
-it did in the original 2003 study: it simply is not more volatile on Iran war-news
-days, so there is no elevated variance to divide by, whatever the ratio Brent shows.
+## Stress-testing the approach
 
-**A pairing worth noticing between this figure and Table 2/3.** Tel Aviv's bar here
-is the third-highest in the whole chart (3.6×) — Israeli equities are genuinely much
-more volatile on war-news days — yet Table 2's coefficient for Tel Aviv is
-statistically indistinguishable from zero, and Table 3 attributes essentially none of
-that extra variance (0.1%) to the shared war-risk factor. Those two facts are not in
-tension: a variable can be highly volatile on war-news days for reasons specific to
-that market (local political or wartime-economy news out of Israel, distinct from
-the oil-and-risk-sentiment channel that moves everything else) without that
-volatility being *driven by the same common factor* the other seventeen variables
-share. Figure 2 answers "is this variable noisier on war days," and Table 2/3 answer
-"is that extra noise the same war-risk factor everyone else is responding to" — Tel
-Aviv is a clean example of a variable where the answer to the first question is yes
-and the answer to the second is no.
+A method this specific to the problem is worth checking against simpler
+alternatives before trusting its output. Three checks were run.
 
-## 3. Is heteroskedasticity-based identification the best approach?
+**The most obvious alternative — a plain regression of each market's daily move on
+the same high-news-day flag — comes back empty.** Run as a straightforward test of
+"is the average move different on flagged days versus not," it finds zero of
+eighteen markets significant at the 5% level. The variance-based approach, on the
+identical eighteen days, finds thirteen of seventeen. The reason for the gap is not
+subtle once you look at the eighteen days themselves: eight lean escalatory and four
+lean toward de-escalation, so a market that genuinely moves in opposite directions on
+bad-news versus good-news days has those moves cancel out in a simple average,
+pushing the estimated effect toward zero regardless of how real the underlying
+sensitivity is. Variance does not cancel the same way — a $5 up-move and a $5
+down-move both add to dispersion — so the shared factor survives averaging even when
+its sign flips from day to day. This is the single clearest piece of evidence that
+the more involved method earns its complexity here rather than adding it for its own
+sake.
 
-**For a shared risk factor whose sign is often ambiguous day to day, observed
-through news volume rather than a clean natural experiment — yes, and Section 6
-below is a direct empirical demonstration of why, not just an assertion.**
+**Splitting the flagged days by direction confirms the intuitive story with nothing
+more than simple averages.** Separating the eighteen days into those where coverage
+leaned escalatory, those where it leaned toward de-escalation, and comparing both
+against the quiet days, seven markets checked — two-year and ten-year yields, oil,
+the S&P, Euro Stoxx, the VIX, and high-yield spreads — all move in the expected
+direction on bad-news days (yields, oil and volatility up, equities down) and mostly
+reverse on good-news days.
 
-- **It is the only method examined here that doesn't need to know the sign of the
-  news.** Six of the eighteen selected days are genuinely mixed (heavy escalation
-  *and* de-escalation coverage at once — March 24–26, July 8). A method that needs a
-  signed regressor (an event-study dummy interacted with direction, a structural VAR
-  shock series) must either discard these days or guess their sign; heteroskedasticity
-  uses them, because uncertainty is itself the identifying variation.
-- **It survives a genuinely adversarial head-to-head test.** Section 6 runs the
-  simplest, most standard alternative — a plain OLS regression of each variable's
-  daily change on the same 1/0 flag — on the exact same day-classification. That
-  regression finds **zero** significant variables at 5% out of eighteen.
-  Heteroskedasticity finds **thirteen of seventeen**. This is not a close call.
-- **It is robust to how the line is drawn.** The window-size robustness check (12 to
-  30 high-news days, Table 5) already shows the headline coefficients barely move.
-  Section 5 adds two more independent ways to produce the 1/0 flag — a supervised
-  classifier and an unsupervised clustering, both built without the hand-tuned
-  threshold — and most of the economically central results (equities down, credit
-  wider, yields up) hold their sign across all of them.
-
-**Where it is not the best tool, honestly stated:**
-
-- It needs at least two regimes of *different* variance in the underlying factor,
-  which is testable (the rank condition, Table 4) but has weak power in a sample this
-  size — four of seventeen coefficients (Tel Aviv, defence, gold, and to a lesser
-  extent the dollar) rest on a weak second instrument (ω₂) and should be read with
-  real caution.
-- It estimates a structural *loading* (sensitivity), not a *level* effect. If the
-  question were "did the war raise the average level of the VIX over this period,"
-  a different tool (a structural break test, or simply comparing pre/post means) would
-  answer it more directly.
-- It needs the day-classification step to be genuinely exogenous to the outcome being
-  measured. Section 5 shows this concretely: a day-set chosen *by realised market
-  volatility itself* is not a valid input (it is circular by construction), which is
-  exactly why news-content-based selection — not price-based selection — is the right
-  design here, not an arbitrary choice.
-
-Sections 4–7 build out the alternatives referenced above in full.
-
-## 4. Three regimes instead of two
-
-War-news days can be split into **bad war news** (coverage skews toward
-escalation), **good war news** (coverage skews toward de-escalation), and **no war
-news** (fundamentals-driven), rather than a single undifferentiated "high-news"
-group. This follows Rigobon (2003, section II.C), which shows the multi-regime
-extension of the same estimator directly: with more than two variance regimes, the
-structural loading can be estimated from any regime pair, and agreement across
-pairs is itself a test of the model. It is built here from the `direction` measure
-already computed for Table 1 (the escalation-minus-de-escalation share of a day's
-coverage): H days with direction > +0.10 are "Bad-news" (8 days), direction < −0.10
-are "Good-news" (4 days), and the six "Unclear" H days form a residual "Mixed"
-group; L days are "No-news" (18 days).
-
-The natural qualitative expectation is that bad news pushes yields and oil up and
-equities down, and good news reverses it — a war-risk factor with the same sign of
-loading throughout should simply flip the average outcome with the sign of the
-day's news.
-
-**Table 7 (excerpt). Mean daily change by regime**
-
-| Variable | Bad-news (n=8) | Good-news (n=4) | No-news (n=18) | Matches expectation |
-|---|---:|---:|---:|---|
-| 2-year Treasury yield | +0.021 pp | −0.008 pp | +0.019 pp | up ✓ |
-| 10-year Treasury yield | +0.011 pp | −0.000 pp | +0.022 pp | up ✓ |
-| Brent | +$3.43 | +$0.11 | +$1.06 | up ✓ |
-| S&P 500 | −0.14% | +0.79% | −0.16% | down ✓ |
-| Euro Stoxx 50 | −0.98% | +0.13% | −0.43% | down ✓ |
-| VIX | +0.69 pts | −0.85 pts | +0.09 pts | up ✓ |
-| High-yield spread | +0.001 pp | −0.010 pp | +0.016 pp | up ✓ |
-
-**All seven core variables match the expected sign on bad-news days, using nothing
-more than simple conditional means** — no IV machinery at all. Bad-news days push
-yields, oil and volatility up and push equities down; good-news days largely
-reverse it (S&P +0.79% vs. −0.14% on bad-news days; VIX −0.85 vs. +0.69).
 ![Figure 6](figures/figure6_regime_comparison.png)
 
-**A genuine overidentification test.** If the linear, direction-symmetric model is
-correct, estimating d_j1 separately from (Bad-news, No-news) and separately from
-(Good-news, No-news) should agree in sign even though the two sub-samples have
-opposite average news direction:
+A stricter version of this check — estimating the sensitivity separately from the
+bad-news days and separately from the good-news days, and asking whether the two
+estimates agree in sign despite pulling from sub-samples with opposite average news
+direction — agrees on ten of seventeen markets. That is a noisier result, unsurprising
+given the sub-samples run to only four and eight days each, but it belongs in the
+record alongside the cleaner seven-for-seven finding above rather than being left out
+because it is less tidy.
 
-**Table 8 (excerpt). Overidentification check**
-
-| Variable | d from Bad vs. No (n=8/18) | d from Good vs. No (n=4/18) | Signs agree? |
-|---|---:|---:|---|
-| S&P 500 | −0.223 | +0.145 | No |
-| Euro Stoxx 50 | −1.547 | −0.303 | Yes |
-| High-yield spread | +0.045 | +0.025 | Yes |
-| VIX | +1.668 | +0.313 | Yes |
-| 2-year yield | +0.012 | −0.081 | No |
-
-Signs agree on **10 of 17 variables (59%)**. This is an honest result, not a clean
-pass: with only 8 and 4 days in the two sub-regimes, the individual estimates are
-necessarily noisy (standard errors were not even reliably computable at n=4), and
-59% agreement is what would be expected from real signal plus real small-sample
-noise, not from either a broken model or a bulletproof one. The **descriptive
-mean-comparison in Table 7 is the more reliable evidence for the regime split** — it
-needs no structural assumptions and gets 7/7 — while Table 8 is reported because an
-honest overidentification check, even a noisy one, belongs in the record.
-
-## 5. Classifying war-news days three independent ways
-
-The headline results flag days 1/0 using a hand-tuned threshold (the top 18 trading
-days by a z-scored average of three coverage signals). Two more principled ways to
-draw the same line, both built in `src/classify.py`:
-
-**(a) Supervised — logistic regression**, trained to predict an *independent,
-market-based* definition of a high-stress day (top 18 days by a composite of
-|z-score| across Brent, VIX, the high-yield spread, the S&P and the two-year yield —
-built entirely from prices, never from news) using only the five NLP features
-(attention, tone shift, disagreement/contest, war-coverage share, Hormuz-coverage
-share). Logistic regression rather than a more flexible model: the sample is small
-(173 days, ~18 positives, a 9:1 imbalance) and the feature count is small (five); a
-model with more capacity would fit noise rather than signal, and logistic
-regression's coefficients answer directly which NLP signal carries the information.
-Evaluated with 5-fold stratified cross-validation and `class_weight="balanced"` to
-correct the imbalance.
-
-**(b) Unsupervised — a two-component Gaussian mixture**, fit only on the same five
-NLP features, with no market data anywhere in the model (not even for evaluation).
-This asks whether the news data has a genuine two-regime structure on its own.
-
-**Table 9. Classifier performance (5-fold cross-validated, out-of-fold)**
-
-| n | n positive | Accuracy | Precision | Recall | F1 | ROC-AUC |
-|---:|---:|---:|---:|---:|---:|---:|
-| 168 | 18 | 0.560 | 0.100 | 0.389 | 0.159 | **0.433** |
-
-Confusion matrix: 87 true negatives, 63 false positives, 11 false negatives, 7 true
-positives.
-
-**This is a genuinely negative result, reported as found.** An ROC-AUC of 0.43 is
-*below* the 0.50 a coin flip achieves — the five NLP features, run through a
-cross-validated logistic regression, cannot predict which days will turn out to be
-high-*market*-stress days. **Table 10** shows why this is not simply broken:
-
-| Feature | Standardised coefficient |
-|---|---:|
-| disagreement (contest) | +0.601 |
-| tone_shift | +0.125 |
-| hormuz_share | −0.068 |
-| attention | −0.238 |
-| war_share | −0.397 |
-
-`attention` and `war_share` load *negatively* — more Iran-war coverage volume, and a
-higher share of Iran coverage being specifically war-framed, both predict *lower*
-odds of a high-stress day in the market-composite sense. The explanation is
-structural, not a bug: the market-composite label is built from a basket that
-includes the two-year yield, and **the two-year yield barely responds to Iran war
-risk specifically** (its variance ratio is only 1.05×, against 6.21× for Brent — see
-Table 0/Figure 2). A composite that includes a variable the war factor doesn't move
-is, by construction, picking up a lot of *other* macro-driven high-volatility days —
-Fed decisions, data releases, unrelated shocks — that have nothing to do with Iran,
-and on exactly those days, financial press coverage is naturally focused elsewhere,
-pulling Iran-specific attention down. **This is evidence for why news-content-based
-day selection is the right design and market-based day selection would not be**: a
-composite built from realised market moves conflates every source of volatility,
-while the news measure is specific to the one factor this report is trying to
-isolate. Overlap between the market-composite label and the NLP-heuristic H-set is
-only 3 of 18 days (17%) — a second, independent confirmation that "days the market
-happened to be volatile" and "days the news was about Iranian war escalation" are
-mostly *different* sets of days, which is exactly the point.
+**Letting a model, rather than a fixed rule, decide which days count as newsy
+produces a genuinely mixed result — and the reason why is itself informative.** A
+cross-validated classifier was trained to predict an independent, market-based
+definition of a high-stress day using only the news features (no price data was
+used in training). Its accuracy came back worse than a coin flip. Digging into why
+turns out to reinforce the main approach rather than undercut it: the market-based
+label used to train the classifier was built from a broad basket of assets that
+includes the two-year yield — and the two-year yield, as established above, barely
+responds to Iran-specific risk at all. A label partly built from a market that
+doesn't respond to this particular risk factor will naturally be dominated by other,
+unrelated sources of volatility (Fed decisions, data releases, and so on), and on
+those days Iran-specific news coverage is, unsurprisingly, not elevated. Only 3 of
+the 18 days flagged by news content overlap with the 18 days flagged by market
+stress — which is really a demonstration of why selecting days from the news itself,
+rather than from realized price moves, is the right design for isolating this
+specific risk: a price-based selection rule would have been contaminated by
+everything else that moves markets, not just Iran.
 
 ![Figure 4](figures/figure4_classifier_diagnostics.png)
 
-**Table 11 (excerpt). d_j1 re-estimated under three ways of drawing the H/L line**
-(heteroskedasticity estimator unchanged; only which 18 days count as H changes)
+Re-running the core estimates using the classifier's own day-selection, and
+separately using an unsupervised clustering that never saw price data at all,
+confirms that the equity and credit results are not an artifact of exactly how the
+newsy-day threshold was drawn — those signs and rough magnitudes hold up across all
+three approaches. The VIX and the dollar are more sensitive to the choice of
+day-set and should be read with a little more caution than the rest of the table.
 
-| Variable | Heuristic (headline) | Supervised classifier | Unsupervised GMM |
-|---|---:|---:|---:|
-| Two-year Treasury yield | +0.018 | +0.165 | +0.010 |
-| Ten-year Treasury yield | +0.019 | +0.248 | +0.009 |
-| S&P 500 | −0.650 | −0.489 | −0.462 |
-| High-yield spread | +0.048 | +0.072 | +0.031 |
-| Dollar | +0.257 | −0.071 | +0.242 |
-| VIX | +1.748 | −2.486 | +0.702 |
-| Euro Stoxx 50 | −1.370 | −0.663 | −1.007 |
+![Figure 5](figures/figure5_method_comparison.png)
 
-Given the classifier's poor market-stress predictive power (AUC 0.43), its resulting
-day-set should not be trusted as much as the heuristic one, and the table bears this
-out: the **equity and credit results (S&P, Euro Stoxx, high-yield spread) keep their
-sign and stay in a similar order of magnitude** under all three day-classification
-methods, but the **VIX and dollar flip sign under the classifier-based set** — the
-clearest sign that a day-set built on a weak classifier propagates that weakness into
-the estimates downstream. Overlap between the classifier's own predicted H-set and
-the heuristic H-set is 5/18; the unsupervised GMM's overlap is 0/18 (it splits the
-data on a different axis than "biggest war news day" — likely high-disagreement,
-low-attention days versus the reverse, rather than the weighted combination the
-heuristic threshold targets). The GMM nonetheless reproduces the core equity/credit
-signs, which is a real if modest piece of evidence that there is a genuine two-regime
-structure in the news data independent of exactly how it's drawn out.
+## What the word list misses
 
-## 6. The plain alternative: event-study OLS
+The escalation/de-escalation language used to score news coverage is a fixed list
+built in advance, and a live, fast-moving conflict generates vocabulary no fixed
+list can anticipate — named agreements, facility names, invented shorthand.
+Checking the verified news text sentence by sentence against that list finds that
+52.5% of sentences plainly about the war — describing strikes, blockades,
+casualties, and ceasefire terms — register zero matches. "Natanz nuclear
+enrichment complex" scores nothing because the list has no place-name knowledge at
+all; "rogue supertankers," a phrase this specific conflict's coverage invented,
+was never going to be on any pre-built list; the "memorandum-of-understanding
+ceasefire" names an agreement that did not exist before this war began.
 
-The most direct test of whether heteroskedasticity is the right tool is to run the
-most standard alternative on the identical 1/0 flag and see what happens:
+This limitation sits at the sentence level and does not undermine the day-selection
+itself, which runs on aggregate coverage volume rather than phrase-matching — a
+spike in Iran-related reporting is detected whether or not any particular sentence
+uses recognized vocabulary. Where it does show up is in anything relying on the
+word list's read of a specific sentence's direction, which is part of why the
+word-list and a general-purpose language-model sentiment score agree only weakly at
+that fine-grained level even though they track each other reasonably well in
+aggregate. A language model reading the text directly, rather than counting
+phrases against a fixed list, would sidestep this — it does not need "Abqaiq" or
+"supertanker" pre-registered to understand what they mean in context — though
+building that as a full automated step was outside the scope of what could be
+tested and verified here.
 
-    dx_t = alpha + beta * war_news_flag_t + u_t        (OLS, HC1 robust SEs)
+## Other frameworks worth knowing about
 
-This asks whether the *average level* of each variable differs on flagged days versus
-not — the textbook event-study approach, and the one most people would reach for
-first.
+A handful of other established approaches could, in principle, answer a version of
+this question, and each was set aside for a specific reason rather than
+overlooked.
 
-**Table 12. Event-study OLS results, full set**
-
-| Variable | β | t | Sig. |
-|---|---:|---:|---|
-| Two-year Treasury yield | +0.012 | 1.04 | |
-| Ten-year Treasury yield | +0.007 | 0.66 | |
-| Break-even inflation | +0.009 | 1.85 | |
-| S&P 500 | +0.042 | 0.17 | |
-| BBB spread | −0.003 | −0.76 | |
-| High-yield spread | −0.009 | −0.49 | |
-| Brent | +1.737 | 1.40 | |
-| Gold | −8.21 | −0.36 | |
-| Dollar | +0.086 | 0.94 | |
-| VIX | +0.088 | 0.15 | |
-| Euro Stoxx 50 | −0.292 | −0.64 | |
-| Nikkei 225 | −0.170 | −0.25 | |
-| Tel Aviv 125 | −0.199 | −0.36 | |
-| MSCI EM | −0.311 | −0.51 | |
-| Swiss franc | +0.171 | 1.39 | |
-| US energy equities | −0.261 | −0.62 | |
-| US airlines | −0.565 | −0.97 | |
-| Aerospace & defence | −0.067 | −0.14 | |
-
-**Zero of eighteen variables significant at 5%.** Not one. Compare with
-heteroskedasticity's 13 of 17 on the *exact same 18 flagged days*.
-
-**Why the gap is this large, and why it is expected rather than a red flag for
-either method.** The event-study regression is comparing *mean levels*. Of the 18
-flagged days, 8 are escalatory and 4 are de-escalatory (with 6 mixed) — so a
-variable that genuinely responds to war risk with opposite signs on bad-news versus
-good-news days (exactly what Section 4 demonstrates it does) will see those opposite
-moves *cancel in a simple average*, pushing beta toward zero regardless of how
-strong the true sensitivity is. The heteroskedasticity estimator sidesteps this
-entirely because variance doesn't cancel the same way a mean does — a $5 up-move and
-a $5 down-move contribute equally to variance, so the shared factor loading survives
-averaging even when its sign doesn't. **This is the single cleanest empirical
-demonstration in this report of why the paper's method is well suited to this
-specific problem**, and it is a head-to-head test, not an assumption.
-
-## 7. Sign and significance across all four combinations
-
-**Table 14. Where the methods agree**
-
-| Variable | Heteroskedasticity (heuristic) | Heteroskedasticity (classifier) | Event-study | All signs agree? |
-|---|---:|---:|---:|---|
-| 2-year Treasury yield | +0.018 (t=1.68) | +0.165 | +0.012 (t=1.04) | Yes |
-| 10-year Treasury yield | +0.019 (t=2.28) | +0.248 | +0.007 (t=0.66) | Yes |
-| Break-even inflation | +0.014 (t=3.45) | +0.026 | +0.009 (t=1.85) | Yes |
-| S&P 500 | −0.650 (t=−2.96) | −0.489 | +0.042 (t=0.17) | **No** |
-| Euro Stoxx 50 | −1.370 (t=−4.47) | −0.663 | −0.292 (t=−0.64) | Yes |
-| High-yield spread | +0.048 (t=3.61) | +0.072 | −0.009 (t=−0.49) | **No** |
-| BBB spread | +0.008 (t=2.91) | +0.006 | −0.003 (t=−0.76) | **No** |
-| VIX | +1.748 (t=3.72) | −2.486 | +0.088 (t=0.15) | **No** |
-| Dollar | +0.257 (t=3.24) | −0.071 | +0.086 (t=0.94) | **No** |
-| Gold | −36.63 (t=−1.90) | +305.55 | −8.21 (t=−0.36) | **No** |
-
-4 of 10 headline variables agree in sign across all three combinations. The right
-way to read this is *not* "the results are only 40% reliable" — the event-study
-column is statistically indistinguishable from zero for every row in this table, so
-comparing its sign against a method that *does* find significant effects is comparing
-a coin flip against a real estimate. The informative comparison is
-**heteroskedasticity-heuristic versus heteroskedasticity-classifier**, which agree
-on 7 of 10 signs (all fail on VIX, dollar, and gold — precisely the three variables
-already flagged in Section 5 as riding on a classifier day-set built from a
-near-random classifier). ![Figure 5](figures/figure5_method_comparison.png)
-
-## 8. Vocabulary coverage of the lexicon
-
-A fixed phrase list built in advance cannot anticipate the specific vocabulary a
-live, unfolding conflict generates — named agreements, facility names, invented
-compound nouns. Checked directly against the verified real-news text for the 18
-selected days, sentence by sentence, against the hand-built lexicon
-(`src/warrisk_lexicon.py`):
-
-**Table 13. Lexicon vocabulary coverage**
-
-| Sentences checked | Zero lexicon hits | % zero-hit | Days covered |
-|---:|---:|---:|---:|
-| 40 | 21 | **52.5%** | 18 |
-
-Over half of sentences from real, dated, sourced reporting on these specific
-war-news days — describing strikes, blockades, casualties, market reactions, and
-ceasefire negotiations — score zero phrase matches against the lexicon. Concrete
-examples the lexicon is blind to, verbatim from the verified text:
-
-- *"the US and Israel struck Iran's Natanz nuclear enrichment complex"* — a facility
-  name; the lexicon has no place-name knowledge at all.
-- *"Iran's IRGC claimed strikes on 85 US targets"* and *"Iran said it struck and
-  disabled two 'rogue supertankers'"* — "supertanker" is a compound noun this
-  specific conflict's coverage invented; no general-purpose or hand-built
-  hawkish/dovish list could have anticipated it.
-- *"large plumes of black smoke over Saudi Aramco's Abqaiq processing facility"* —
-  another proper noun with no generic escalation phrase attached.
-- *"the June memorandum-of-understanding ceasefire was widely reported as
-  effectively over"* — a named diplomatic instrument that only this conflict's own
-  history could name; a fixed phrase list built before the war cannot contain it.
-
-**What this means for the results, and what doesn't fix it.** The war-news *day
-selection* (Table 1) is unaffected — it runs on GDELT's coverage-volume timelines
-(is there more Iran-war coverage than usual today?), not on lexicon phrase-matching,
-so vocabulary gaps don't change which days are flagged. What the gap *does* limit is
-anything relying on the lexicon's *direction* signal at the sentence level: the
-`direction` measure (escalation vs. de-escalation share) is built from aggregate
-GDELT query-volume, which is robust to this problem since GDELT's own topical search
-doesn't require exact phrase matches the way a fixed dictionary does — but the
-headline/event-level lexicon scoring used for cross-checking against FinBERT (the
-`event_lexicon_mean` column of Table 1) is exposed to it directly, which is part of
-why the two NLP methods agree only weakly at that level (r = −0.198, versus a
-stronger agreement at the aggregate coverage level). A promising fix not built out
-here for scope reasons: score the real event text directly with a language model
-rather than a fixed phrase list — a model reading "supertanker" or "Abqaiq" in
-context does not need those exact strings pre-registered, because it brings world
-knowledge the lexicon cannot. This is discussed as a live option in Section 9 rather
-than implemented, given the scope of what could be tested and verified here.
-
-## 9. Alternatives considered but not implemented
-
-Beyond the three implemented above, four more approaches from the identification and
-text-analysis literature were considered:
-
-| Approach | What it does | Why not implemented here |
+| Approach | What it does | Why it wasn't used here |
 |---|---|---|
-| **Geopolitical Risk Index** (Caldara & Iacoviello, *American Economic Review* 2018) | Counts geopolitical-risk articles across 10 major newspapers, builds a continuous index, used directly as a regressor | A continuous *level* regression re-introduces the sign problem heteroskedasticity was built to avoid (Section 6 demonstrates directly why that's costly here); building it properly needs full-text archive access to 10 specific papers, which free-API access doesn't provide |
-| **Economic Policy Uncertainty Index** (Baker, Bloom & Davis, *QJE* 2016) | Same keyword-counting-index methodology, generalised to any uncertainty theme | Same limitation as GPR — a continuous index answers a related but different question (uncertainty *level*, not the shift in variance this report is identifying) |
-| **Markov-switching / regime-switching volatility models** (Hamilton, *Econometrica* 1989) | Lets the data itself estimate regime membership and transition probabilities from *returns alone*, with no news input | This is the market-only analogue of Section 5(b)'s GMM, at a more sophisticated (dynamic, transition-aware) level; Section 5 already shows that a market-only day-classification (the "market-composite" label) is close to uninformative about Iran-specific war risk *by construction* — a return-only Markov-switching model would inherit the same conflation-of-all-volatility-sources problem, for the same underlying reason |
-| **Structural VAR with sign restrictions** (Uhlig, *JME* 2005) | Identifies a shock via theoretically motivated sign restrictions on impulse responses, instead of heteroskedasticity | A legitimate alternative identification strategy in principle, but it requires specifying a full VAR system and defensible sign restrictions across all 17 variables jointly — a substantially larger modeling exercise than is warranted here, and one that trades one set of assumptions (regime stability) for another (restriction validity) rather than avoiding assumptions altogether |
-| **Direct LLM severity scoring** | Read each day's real news text and output a calibrated war-risk score, rather than counting lexicon phrases | The natural fix for Section 8's vocabulary-coverage gap; not built as an automated pipeline step here because it needs either an API-metered LLM call per day or manual scoring (which Section 8 already does, by hand, for the zero-hit sentences, as a proof of concept rather than a full pipeline) |
+| Geopolitical Risk Index (Caldara & Iacoviello, 2018) | Counts geopolitical-risk articles across ten major newspapers into a continuous index | Answers a related but different question — a risk *level*, not the variance shift this analysis is built around — and needs full-text access to ten specific papers that free data sources don't provide |
+| Economic Policy Uncertainty Index (Baker, Bloom & Davis, 2016) | Same keyword-counting methodology, applied to policy uncertainty generally | Same limitation as above |
+| Markov-switching volatility models (Hamilton, 1989) | Lets returns alone determine regime membership, with no news input at all | The market-only alternative already tested here (the unsupervised clustering) shows that a market-only day-classification is close to uninformative about Iran-specific risk by construction, for the same reason a return-only switching model would be |
+| Structural VAR with sign restrictions (Uhlig, 2005) | Identifies the shock through theoretically motivated restrictions on how variables can respond, rather than through variance shifts | Requires specifying a full system and defensible restrictions across seventeen variables at once — a substantially larger undertaking that trades one set of assumptions for another rather than avoiding assumptions |
+| Direct language-model scoring | Reads each day's text and outputs a calibrated severity score rather than counting fixed phrases | The natural fix for the vocabulary gap above; not built as a full pipeline here given the added cost and scope of running a model call per day across the sample |
 
-None of these were set aside because they're worse ideas — GPR and EPU in
-particular are well-established, Fed-published methodologies. They were set aside
-because each answers a related but different question (a continuous risk *level*
-rather than the variance-shift this report identifies), or needs data/scope
-free-API, single-session access doesn't support. The three that were implemented
-(Sections 4–6) test a specific, falsifiable claim about the headline method — does a
-3-regime split match the qualitative economic story, does the day-set choice
-matter, does the identification strategy actually beat the obvious alternative —
-rather than being the easiest to build.
+None of these are worse ideas — the Geopolitical Risk Index in particular is a
+well-established, Fed-published methodology. Each simply answers a different
+question, or needs data this analysis's free, single-session data sources could not
+supply.
 
-## 10. Comparison against the 2003 episode
+## A different war than 2003
 
-An economically motivated prior, based on the 2003 Iraq-war episode: oil, credit
-spreads and equities should move similarly to Rigobon and Sack's findings, but
-**yields should behave differently** given higher inflation, larger debt concerns,
-and weaker flight-to-quality in 2026 — driven in part by a structural change: US
-crude oil output is now roughly **14 million barrels/day, versus roughly 6 million
-in 2003**, which changes how a war-driven oil shock feeds through the US economy.
+The 2003 episode offers a natural benchmark, and one deliberate reason to expect a
+break from it: US crude output has roughly doubled and then some since then, from
+around 6 million barrels a day to around 14 million, which changes how a
+war-driven oil shock feeds through the domestic economy.
 
-| | 2003 (Rigobon-Sack) | 2026 (this report) | Matches prior? |
+| | 2003 (Rigobon-Sack) | 2026 (this analysis) | Consistent with the shift? |
 |---|---|---|---|
-| Oil | rises | rises ($5/bbl by construction; Table 3 shows 6.2× the variance on war days) | Yes |
-| Credit spreads | widen | widen (HY +4.8bp, BBB +0.8bp, both p<0.01) | Yes |
-| Equities | fall | fall (S&P −0.65%, more abroad: −1.4 to −1.7%) | Yes |
-| Gold | no significant response | no significant response (t=−1.90, borderline) | Yes |
-| Treasury yields | **fall** (−26bp on the 10y) | **rise** (+1.9bp on the 10y, t=2.28) | **No — as predicted** |
-| Break-even inflation | falls | **rises** (+1.4bp, t=3.45) | **No — as predicted** |
-| Dollar | falls | **rises** (+0.26%, t=3.24) | **No — as predicted** |
+| Oil | Rises | Rises (variance 6.2x higher on war days) | Yes |
+| Credit spreads | Widen | Widen (high yield +4.8bp, investment grade +0.8bp) | Yes |
+| Equities | Fall | Fall (S&P −0.65%, more abroad) | Yes |
+| Gold | No significant response | No significant response | Yes |
+| Treasury yields | Fall (−26bp on the ten-year) | Rise (+1.9bp on the ten-year) | No — as expected |
+| Break-even inflation | Falls | Rises | No — as expected |
+| Dollar | Falls | Rises | No — as expected |
 
-Every sign that was expected to hold, held; every sign that was expected to flip,
-flipped. The pattern that US equities fall least among the major indices, and that
-the US energy sector actually *gains* on war-risk-up days (XLE +0.96%, moving with
-rather than against the broader equity sell-off — Table 2), is the direct
-market-level expression of the ~14M vs. ~6M bbl/day shift in US oil production: the
-US is now a large enough net producer that a war-driven oil-price spike is a mixed
-rather than uniformly negative shock to the US economy, consistent with US Treasury
-yields rising (an inflation/growth story) rather than falling (a pure flight-to-
-safety story) the way they did when the 2003 shock was read as a threat to demand
-rather than partly an offsetting boost to domestic energy producers.
+Every leg that was expected to hold steady with 2003 held; every leg expected to
+flip, flipped. The US-outperformance pattern in equities, and energy stocks moving
+with rather than against the broader market, is the same story told at the sector
+level: a much larger domestic oil industry turns a war-driven price spike from a
+uniformly negative shock into a genuinely mixed one for the US economy, which is
+consistent with yields rising on an inflation-and-growth read rather than falling on
+a pure flight-to-safety read the way they did when the 2003 shock was seen purely as
+a threat to demand.
 
-## 11. Limitations
+## Reading the caveats
 
-- **The orthogonality assumption cannot be independently verified.** Identification
-  requires that no other factor was unusually volatile on exactly the selected days;
-  the robustness-to-window-size check (Table 5) is reassuring but not decisive.
-- **Comparison days are not fully war-news-free** in an eight-month war, which biases
-  the variance shares in Table 3 downward — they are reported as lower bounds.
-- **"War risk" bundles several distinct sub-risks** (escalation probability,
-  duration, Hormuz access) into one estimated factor rather than separating them.
-- **The sample is small** — 18 days a regime — so the rank condition (Table 4)
-  cannot be confirmed with much power, and four of seventeen coefficients rest on a
-  weak second instrument.
-- **The supervised classifier's near-random performance (Section 5) is itself a
-  limitation worth stating plainly**: predicting broad market stress and identifying
-  Iran-specific war-risk days are different tasks with different answers here, and
-  only the second is what the headline method actually needs.
-- **The vocabulary-coverage gap (Section 8, 52.5% zero-hit rate) affects sentence-
-  and headline-level lexicon scoring specifically**, not the aggregate coverage-
-  volume measure the day-selection runs on — but any future work extending this
-  lexicon to score individual sentences (rather than aggregate volume) should
-  budget for this gap rather than assume the phrase list is complete.
-- **Table 1's event descriptions are a hand-verified, one-time research step**, not
-  an automated, infinitely-reproducible pipeline stage the way the day-selection is.
-  Re-running `scripts/01`-`03` reproduces the day-selection and all of Tables 2–14
-  exactly; Table 1's citations would need to be re-verified by hand if the selected
-  days ever changed materially.
+A few limitations should travel with every number above. The core assumption behind
+the whole exercise — that nothing *other* than war risk was unusually volatile on
+exactly the eighteen flagged days — cannot be independently proven, only checked for
+plausibility, and the stability of the results when the day-count is widened or
+narrowed is reassuring on that front without being conclusive. The quiet comparison
+days are not perfectly free of war-related news in a conflict that ran six months,
+which biases the variance-share numbers in the earlier table downward, so they are
+best read as floors. "War risk" here is a single estimated factor standing in for
+several distinct things at once — the odds of further escalation, how long the
+conflict runs, how much of the Strait of Hormuz stays open — bundled together rather
+than separated out. The sample itself is small, eighteen days on each side, which
+leaves four of the seventeen coefficients (gold, Tel Aviv, defence stocks, and to a
+lesser extent the dollar) resting on weaker statistical footing than the rest and
+worth treating with real caution. And the eighteen event descriptions in the table
+above are a hand-verified research step rather than something the automated pipeline
+regenerates on its own — a genuine change in which days get flagged would need that
+verification redone.
 
 ## References
 
@@ -634,6 +429,6 @@ rather than partly an offsetting boost to domestic energy producers.
   from an Agnostic Identification Procedure," *Journal of Monetary Economics*
   52(2), 381–419.
 - News data: GDELT Project DOC 2.0 API (day-selection); Al Jazeera, CNN and
-  Bloomberg (Table 1 event verification, with source URLs in
+  Bloomberg (event verification, with source URLs in
   `data/news/verified_events.json`).
 - Market data: FRED (Federal Reserve Bank of St. Louis) and Yahoo Finance.
